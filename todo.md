@@ -32,6 +32,10 @@
 - [x] Keep deep linked regional meal pages loading until cloud meal records are ready.
 - [x] Test the regional meal detail source note, source label, and source link.
 - [x] Test the deep linked regional meal loading state before cloud records arrive.
+- [x] Review additional Pan Asian dish records and select clear regional meal options.
+- [x] Import more regional dishes with country, source record, and per serving values.
+- [x] Verify the expanded regional meal count, source details, and catalogue display.
+- [x] Add and run tests for the extended regional meal catalogue.
 
 - [x] Commit and push the completed PlateFootprint updates to GitHub.
 

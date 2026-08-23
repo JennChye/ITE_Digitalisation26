@@ -25,6 +25,25 @@ Curated records selected from the public `Asia_recipes_GHG.xlsx` data file:
 | Chana Masala | India | 1085 | 246.12 | 0.25 |
 | Kung Pao Chicken | China | 391 | 339.65 | 0.34 |
 
+## Additional Curated Regional Records
+
+The following additional records use the same public `Asia_recipes_GHG.xlsx` file and the same conversion from gCO2e per serving to kg CO2e per serving. They are distinct from the first curated set and retain their individual country and source record labels in the app.
+
+| Dish | Country | Source record | Total gCO2e per serving | App value kg CO2e per serving |
+|---|---|---:|---:|---:|
+| Pad Thai | Thailand | 697 | 374.04 | 0.37 |
+| Malaysian Nasi Lemak | Malaysia | E2552 | 904.45 | 0.90 |
+| Indonesian Nasi Goreng | Indonesia | 734 | 498.90 | 0.50 |
+| Beef Pho | Vietnam | E2963 | 1258.77 | 1.26 |
+| Filipino Chilli Crab | Philippines | 661 | 513.51 | 0.51 |
+| Bibimbap | South Korea | E996 | 667.73 | 0.67 |
+| Korean Kimchi Fried Rice | South Korea | 651 | 492.38 | 0.49 |
+| Japanese Beef Bowl | Japan | 1243 | 1374.11 | 1.37 |
+| Vegetable Biryani | India | E1995 | 263.68 | 0.26 |
+| Chinese Mapo Tofu | China | E275 | 251.04 | 0.25 |
+| Dandan Noodles | China | 399 | 381.02 | 0.38 |
+| Chinese Ramen Noodle Salad | China | E292 | 642.80 | 0.64 |
+
 ## Candidate Two: Asian Dish Carbon, Price and Nutrition Inventory
 
 Source: https://figshare.com/articles/dataset/Sustainable_diet_c_b_arbon_footprint_price_and_nutrition_intake_inventory_of_1_182_Asian_dishes_b_/25999843
