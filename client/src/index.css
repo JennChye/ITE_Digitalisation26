@@ -1,0 +1,184 @@
+/* Hawker Market Journal style: warm rice paper, Hawker Leaf Green, hand made texture, and editorial readability. */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: "Nunito Sans", sans-serif;
+  --font-display: "Fraunces", serif;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --primary: #216442;
+  --primary-foreground: #fffdf5;
+  --sidebar-primary: #216442;
+  --sidebar-primary-foreground: #fffdf5;
+  --chart-1: #80ad76;
+  --chart-2: #d57448;
+  --chart-3: #1d563a;
+  --chart-4: #e6c978;
+  --chart-5: #a46b4c;
+  --radius: 0.85rem;
+  --background: #f8f4e8;
+  --foreground: #163c2d;
+  --card: #fffdf5;
+  --card-foreground: #163c2d;
+  --popover: #fffdf5;
+  --popover-foreground: #163c2d;
+  --secondary: #e8f1df;
+  --secondary-foreground: #244d37;
+  --muted: #f0eddf;
+  --muted-foreground: #617468;
+  --accent: #e4efdc;
+  --accent-foreground: #174231;
+  --destructive: #b54c37;
+  --destructive-foreground: #fffdf5;
+  --border: #dce8d1;
+  --input: #dce8d1;
+  --ring: #43845b;
+  --sidebar: #fffdf5;
+  --sidebar-foreground: #163c2d;
+  --sidebar-accent: #e4efdc;
+  --sidebar-accent-foreground: #174231;
+  --sidebar-border: #dce8d1;
+  --sidebar-ring: #43845b;
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Nunito Sans", sans-serif;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.journal-grain {
+  background-image: radial-gradient(rgba(41, 85, 57, 0.14) 0.5px, transparent 0.5px);
+  background-size: 6px 6px;
+  mask-image: linear-gradient(to bottom, black, transparent 70%);
+}
+
+.leaf-loop {
+  border: 2px solid rgba(74, 128, 88, 0.38);
+  border-radius: 100% 0 100% 0;
+  transform: rotate(-28deg);
+}
+
+.market-stamp {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid currentColor;
+  border-radius: 0.35rem;
+  padding: 0.22rem 0.45rem;
+  font-size: 0.61rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.receipt-note {
+  border: 1px dashed #b6cdaa;
+  border-radius: 1rem;
+  background: #fffaf0;
+  box-shadow: 5px 5px 0 #e1ead8;
+}
+
+.photo-scan-line {
+  top: 12%;
+  animation: photo-scan 1.15s cubic-bezier(0.77, 0, 0.175, 1) infinite alternate;
+}
+
+@keyframes photo-scan {
+  from { transform: translateY(0); }
+  to { transform: translateY(240px); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .meal-card {
+    animation: meal-rise 420ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  }
+
+  @keyframes meal-rise {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo-scan-line {
+    animation: none;
+    top: 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply outline-ring/50;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [type="button"]:not(:disabled),
+  [type="submit"]:not(:disabled),
+  [type="reset"]:not(:disabled),
+  a[href] {
+    @apply cursor-pointer;
+  }
+}
