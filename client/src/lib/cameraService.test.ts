@@ -1,4 +1,4 @@
-import { CameraAccessError, cameraIsSupported, deleteTemporaryPhoto, requestCameraPreview } from "./cameraService";
+import { CameraAccessError, MAX_MEAL_UPLOAD_SOURCE_BYTES, cameraIsSupported, deleteTemporaryPhoto, getMealPhotoFileError, requestCameraPreview } from "./cameraService";
 import { describe, expect, it, vi } from "vitest";
 
 describe("camera service", () => {
@@ -29,5 +29,11 @@ describe("camera service", () => {
 
     expect(revoke).toHaveBeenCalledWith("blob:temporary-photo");
     revoke.mockRestore();
+  });
+
+  it("accepts supported meal photos and gives clear feedback for unsupported or very large uploads", () => {
+    expect(getMealPhotoFileError({ type: "image/jpeg", size: 200_000 })).toBeNull();
+    expect(getMealPhotoFileError({ type: "image/heic", size: 200_000 })).toMatch(/JPG, PNG, or WebP/);
+    expect(getMealPhotoFileError({ type: "image/png", size: MAX_MEAL_UPLOAD_SOURCE_BYTES + 1 })).toMatch(/below 12 MB/);
   });
 });

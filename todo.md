@@ -6,6 +6,11 @@
 - [x] Show recognised ingredients, confidence, and clear review options in the camera flow.
 - [x] Add and run tests for database matching and unclear photo fallbacks.
 - [x] Add a camera review test for unclear photo retake and manual entry recovery.
+- [x] Review the current photo analysis prompt, file limits, and trusted match rules.
+- [x] Improve AI results for primary food, visible ingredients, and clear match explanations.
+- [x] Prepare camera and uploaded images at a reliable size before secure analysis.
+- [x] Improve the photo review details for both camera and uploaded images.
+- [x] Add and run tests for image analysis validation and clear recovery actions.
 
 - [x] Commit and push the completed PlateFootprint updates to GitHub.
 
