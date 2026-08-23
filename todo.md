@@ -1,6 +1,6 @@
 # PlateFootprint Detail Page Tasks
 
-- [ ] Commit and push the completed PlateFootprint updates to GitHub.
+- [x] Commit and push the completed PlateFootprint updates to GitHub.
 
 - [x] Verify every published dish level value available in the IPUR NUS article.
 - [x] Upgrade PlateFootprint with secure user accounts and cloud database support.
