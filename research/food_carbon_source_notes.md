@@ -29,3 +29,7 @@ The IPUR NUS article published on 14 October 2025 directly names three 2020s dis
 The same article also gives historical comparisons for these same three dishes and provides ingredient examples for chicken, pork, and beef. It does not publish a broader itemised meal database. Therefore the cloud import must contain the three verified 2020s meal records only. Other app dishes must remain clearly labelled as prototype ingredient estimates, not IPUR published dish values.
 
 Verified source: https://ipur.nus.edu.sg/insights/the-carbon-intensity-of-food-items-what-you-need-to-know-2/
+
+## IPUR Reverification, August 2026
+
+The IPUR NUS article was reviewed again on 23 August 2026. It directly identifies the same three 2020s meal level figures only: Chicken Rice at 3.13 kg CO2e per serving, Laksa at 6.53 kg CO2e per serving, and Chicken Biryani at 9.91 kg CO2e per serving. Beef, pork, and chicken values in the article are ingredient examples, not additional dish level records. The linked presentation was also checked for additional named meal values, but it did not provide a searchable additional meal database. No extra published dish records should be created without a direct named serving value from an IPUR source.

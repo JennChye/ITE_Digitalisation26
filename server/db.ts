@@ -101,6 +101,44 @@ export type CloudMealInput = {
   loggedAt: Date;
 };
 
+export type UserTopMeal = {
+  mealSlug: string;
+  mealName: string;
+  category: "Vegetarian" | "Non Vegetarian";
+  timesLogged: number;
+  totalServings: number;
+  lastLoggedAt: Date;
+};
+
+type TopMealLog = Pick<UserMealLog, "mealSlug" | "mealName" | "category" | "servings" | "loggedAt">;
+
+export function summariseUserTopMeals(logs: TopMealLog[], limit = 5): UserTopMeal[] {
+  const grouped = new Map<string, UserTopMeal>();
+
+  for (const log of logs) {
+    const existing = grouped.get(log.mealSlug);
+    if (existing) {
+      existing.timesLogged += 1;
+      existing.totalServings += log.servings;
+      if (log.loggedAt.getTime() > existing.lastLoggedAt.getTime()) existing.lastLoggedAt = log.loggedAt;
+      continue;
+    }
+
+    grouped.set(log.mealSlug, {
+      mealSlug: log.mealSlug,
+      mealName: log.mealName,
+      category: log.category,
+      timesLogged: 1,
+      totalServings: log.servings,
+      lastLoggedAt: log.loggedAt,
+    });
+  }
+
+  return Array.from(grouped.values())
+    .sort((first, second) => second.timesLogged - first.timesLogged || second.totalServings - first.totalServings || second.lastLoggedAt.getTime() - first.lastLoggedAt.getTime() || first.mealName.localeCompare(second.mealName))
+    .slice(0, limit);
+}
+
 function requireDatabase<T>(database: T | null): T {
   if (!database) throw new Error("Cloud meal storage is not available. Please try again.");
   return database;
@@ -114,6 +152,10 @@ export async function listPublishedMeals(): Promise<PublishedMeal[]> {
 export async function listUserMealLogs(userId: number): Promise<UserMealLog[]> {
   const db = requireDatabase(await getDb());
   return db.select().from(userMealLogs).where(eq(userMealLogs.userId, userId)).orderBy(desc(userMealLogs.loggedAt));
+}
+
+export async function listUserTopMeals(userId: number): Promise<UserTopMeal[]> {
+  return summariseUserTopMeals(await listUserMealLogs(userId));
 }
 
 export async function upsertUserMealLog(userId: number, input: CloudMealInput): Promise<void> {

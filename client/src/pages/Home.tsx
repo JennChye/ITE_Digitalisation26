@@ -3,11 +3,13 @@
  * Hawker Leaf Green accents, soft editorial type, and tap friendly meal cards.
  */
 import BottomNavigation from "@/components/BottomNavigation";
+import { TopMealSummary, TopMealsDashboard } from "@/components/TopMealsDashboard";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { startLogin } from "@/const";
 import { useCloudFoods } from "@/hooks/useCloudFoods";
 import { FOOD_DATA_SOURCE_URL } from "@/lib/foodDatabase";
 import { getFootprintBand } from "@/lib/mealFootprint";
+import { trpc } from "@/lib/trpc";
 import { ArrowUpRight, BookOpenText, ChevronRight, CircleHelp, Cloud, Leaf, LogIn, Sprout } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -25,6 +27,7 @@ export default function Home() {
   // nonce cookie and must run only at the moment of navigation.
   const { isAuthenticated, logout } = useAuth();
   const { foods } = useCloudFoods();
+  const topMeals = trpc.mealHistory.topFive.useQuery(undefined, { enabled: isAuthenticated });
 
   const [, navigate] = useLocation();
 
@@ -64,6 +67,8 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <TopMealsDashboard isAuthenticated={isAuthenticated} isLoading={topMeals.isLoading} topMeals={(topMeals.data ?? []) as TopMealSummary[]} onLogMeal={() => navigate("/log")} onSignIn={startLogin} />
 
         <section className="pt-9" aria-labelledby="meal-list-title">
           <div className="mb-4 flex items-end justify-between">

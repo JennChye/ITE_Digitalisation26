@@ -61,11 +61,15 @@ export function useMealCloudSync() {
   const utils = trpc.useUtils();
   const localImportStarted = useRef(false);
   const cloudHistory = trpc.mealHistory.list.useQuery(undefined, { enabled: auth.isAuthenticated });
-  const upsert = trpc.mealHistory.upsert.useMutation({ onSuccess: () => utils.mealHistory.list.invalidate() });
-  const importLogs = trpc.mealHistory.import.useMutation({ onSuccess: () => utils.mealHistory.list.invalidate() });
-  const updateServings = trpc.mealHistory.updateServings.useMutation({ onSuccess: () => utils.mealHistory.list.invalidate() });
-  const deleteLog = trpc.mealHistory.delete.useMutation({ onSuccess: () => utils.mealHistory.list.invalidate() });
-  const clearDate = trpc.mealHistory.clearDate.useMutation({ onSuccess: () => utils.mealHistory.list.invalidate() });
+  const invalidateMealInsights = () => {
+    utils.mealHistory.list.invalidate();
+    utils.mealHistory.topFive.invalidate();
+  };
+  const upsert = trpc.mealHistory.upsert.useMutation({ onSuccess: invalidateMealInsights });
+  const importLogs = trpc.mealHistory.import.useMutation({ onSuccess: invalidateMealInsights });
+  const updateServings = trpc.mealHistory.updateServings.useMutation({ onSuccess: invalidateMealInsights });
+  const deleteLog = trpc.mealHistory.delete.useMutation({ onSuccess: invalidateMealInsights });
+  const clearDate = trpc.mealHistory.clearDate.useMutation({ onSuccess: invalidateMealInsights });
 
   useEffect(() => {
     if (!shouldStartLocalImport(auth.isAuthenticated, localImportStarted.current, importLogs.isPending)) return;

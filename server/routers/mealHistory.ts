@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { clearUserMealLogsForDate, deleteUserMealLog, listUserMealLogs, updateUserMealLogServings, upsertUserMealLog } from "../db";
+import { clearUserMealLogsForDate, deleteUserMealLog, listUserMealLogs, listUserTopMeals, updateUserMealLogServings, upsertUserMealLog } from "../db";
 import { protectedProcedure, router } from "../_core/trpc";
 
 const cloudMealInput = z.object({
@@ -16,6 +16,7 @@ const cloudMealInput = z.object({
 
 export const mealHistoryRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => listUserMealLogs(ctx.user.id)),
+  topFive: protectedProcedure.query(async ({ ctx }) => listUserTopMeals(ctx.user.id)),
   upsert: protectedProcedure.input(cloudMealInput).mutation(async ({ ctx, input }) => {
     await upsertUserMealLog(ctx.user.id, input);
     return { success: true } as const;

@@ -52,7 +52,7 @@ export const foods: Food[] = [
     category: "Vegetarian",
     image: "/manus-storage/platefootprint-roti-prata_561c2526.png",
     factors: ["Flour based dough", "Vegetable curry ingredients", "Cooking energy"],
-    estimateMethod: "Published meal research",
+    estimateMethod: "Prototype ingredient estimate",
   },
   {
     id: "nasi-lemak",

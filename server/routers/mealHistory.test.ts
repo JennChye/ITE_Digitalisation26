@@ -5,6 +5,7 @@ const dbMock = vi.hoisted(() => ({
   clearUserMealLogsForDate: vi.fn(),
   deleteUserMealLog: vi.fn(),
   listUserMealLogs: vi.fn(),
+  listUserTopMeals: vi.fn(),
   updateUserMealLogServings: vi.fn(),
   upsertUserMealLog: vi.fn(),
 }));
@@ -39,6 +40,15 @@ describe("mealHistory cloud access", () => {
     await caller.list();
 
     expect(dbMock.listUserMealLogs).toHaveBeenCalledWith(17);
+  });
+
+  it("returns a private top five summary for only the authenticated user", async () => {
+    dbMock.listUserTopMeals.mockResolvedValue([]);
+    const caller = mealHistoryRouter.createCaller(contextForUser(19));
+
+    await caller.topFive();
+
+    expect(dbMock.listUserTopMeals).toHaveBeenCalledWith(19);
   });
 
   it("keeps the authenticated user id when saving a cloud meal", async () => {

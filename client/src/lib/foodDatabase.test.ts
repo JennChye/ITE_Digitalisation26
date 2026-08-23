@@ -11,6 +11,7 @@ describe("expanded Singapore food database", () => {
   it("labels added meal values as prototype ingredient estimates", () => {
     const addedDish = getFoodById("hokkien-mee");
     expect(addedDish?.estimateMethod).toBe("Prototype ingredient estimate");
-    expect(foods.filter((food) => food.estimateMethod === "Published meal research")).toHaveLength(4);
+    expect(getFoodById("roti-prata")?.estimateMethod).toBe("Prototype ingredient estimate");
+    expect(foods.filter((food) => food.estimateMethod === "Published meal research")).toHaveLength(3);
   });
 });

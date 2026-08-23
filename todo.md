@@ -20,6 +20,10 @@
 - [x] Test unclear photo recovery into a flexible estimate with visible ingredients.
 - [x] Test manual entry navigation into the flexible estimate screen.
 - [x] Test unclear photo navigation into the flexible estimate screen with detected ingredients.
+- [x] Verify all directly published IPUR NUS dish values and reconcile project records.
+- [x] Add a protected top five most logged meals aggregation for each user.
+- [x] Build a mobile dashboard section for signed in user top five meals.
+- [x] Add and run tests for source boundaries, user privacy, aggregation, and dashboard states.
 
 - [x] Commit and push the completed PlateFootprint updates to GitHub.
 
