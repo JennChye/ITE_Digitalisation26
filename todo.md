@@ -24,6 +24,14 @@
 - [x] Add a protected top five most logged meals aggregation for each user.
 - [x] Build a mobile dashboard section for signed in user top five meals.
 - [x] Add and run tests for source boundaries, user privacy, aggregation, and dashboard states.
+- [x] Research regional food carbon datasets with public meal or ingredient values.
+- [x] Select only comparable regional records and document measurement and source limits.
+- [x] Extend the published meal data with verified regional records and source labels.
+- [x] Show regional source information clearly in the meal experience.
+- [x] Add and run tests for regional records and source transparency.
+- [x] Keep deep linked regional meal pages loading until cloud meal records are ready.
+- [x] Test the regional meal detail source note, source label, and source link.
+- [x] Test the deep linked regional meal loading state before cloud records arrive.
 
 - [x] Commit and push the completed PlateFootprint updates to GitHub.
 

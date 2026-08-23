@@ -8,7 +8,10 @@ export type Food = {
   image?: string;
   cardGradient?: string;
   factors: string[];
-  estimateMethod: "Published meal research" | "Prototype ingredient estimate";
+  estimateMethod: "Published meal research" | "Regional research dataset" | "Prototype ingredient estimate";
+  sourceLabel?: string;
+  sourceUrl?: string;
+  sourcePublishedOn?: string;
 };
 
 export const FOOD_DATA_SOURCE_URL =

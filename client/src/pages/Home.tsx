@@ -91,7 +91,7 @@ export default function Home() {
                   <span className="absolute inset-y-0 left-0 w-[68%] bg-[#fffaf0]" />
                   <span className="absolute inset-y-0 left-[62%] w-10 bg-gradient-to-r from-[#fffaf0] to-transparent" />
                   <span className="relative flex min-h-48 max-w-[68%] flex-col items-start justify-between p-5 sm:p-6">
-                    <span className="flex flex-wrap gap-2"><span className="market-stamp border-[#a7c09c] bg-[#eef4e7] text-[#3e6d49]">Hawker note {String(index + 1).padStart(2, "0")}</span><span className="rounded-full border border-[#d6e3ce] px-2.5 py-1 text-[0.65rem] font-extrabold text-[#617568]">{food.category}</span></span>
+                    <span className="flex flex-wrap gap-2"><span className="market-stamp border-[#a7c09c] bg-[#eef4e7] text-[#3e6d49]">Hawker note {String(index + 1).padStart(2, "0")}</span><span className="rounded-full border border-[#d6e3ce] px-2.5 py-1 text-[0.65rem] font-extrabold text-[#617568]">{food.category}</span>{food.estimateMethod === "Regional research dataset" && <span className="rounded-full border border-[#e1c68e] bg-[#fff6dc] px-2.5 py-1 text-[0.65rem] font-extrabold text-[#8b6424]">Pan Asia research</span>}</span>
                     <span>
                       <span className="block font-display text-3xl leading-[0.95] tracking-[-0.05em] text-[#173f2e] sm:text-4xl">{food.name}</span>
                       <span className="mt-3 flex items-center gap-2"><span className={`size-2.5 shrink-0 rounded-full ${band.dotClass}`} aria-hidden="true" /><span className="text-xs font-extrabold text-[#50695a]">{cardImpactText(food.carbonScore)}</span></span>

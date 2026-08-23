@@ -1,0 +1,1 @@
+ALTER TABLE `publishedMeals` MODIFY COLUMN `estimateMethod` enum('published_research','regional_research','prototype_estimate') NOT NULL;

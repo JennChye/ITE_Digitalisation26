@@ -18,7 +18,7 @@ export const publishedMeals = mysqlTable("publishedMeals", {
   name: varchar("name", { length: 255 }).notNull(),
   carbonHundredths: int("carbonHundredths").notNull(),
   category: mysqlEnum("category", ["Vegetarian", "Non Vegetarian"]).notNull(),
-  estimateMethod: mysqlEnum("estimateMethod", ["published_research", "prototype_estimate"]).notNull(),
+  estimateMethod: mysqlEnum("estimateMethod", ["published_research", "regional_research", "prototype_estimate"]).notNull(),
   sourceLabel: varchar("sourceLabel", { length: 255 }).notNull(),
   sourceUrl: varchar("sourceUrl", { length: 512 }).notNull(),
   sourcePublishedOn: varchar("sourcePublishedOn", { length: 16 }).notNull(),

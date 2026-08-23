@@ -18,6 +18,7 @@ import {
   normaliseServings,
 } from "@/lib/mealFootprint";
 import { ArrowLeft, ArrowUpRight, Leaf, Minus, Plus, ReceiptText, Sprout } from "lucide-react";
+import React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useLocation, useRoute } from "wouter";
@@ -55,20 +56,42 @@ function MealNotFound({ navigate }: { navigate: (to: string) => void }) {
   );
 }
 
+function MealLoading() {
+  return (
+    <main className="min-h-screen bg-[#f8f4e8] px-4 py-5 text-[#163c2d]">
+      <div className="journal-grain pointer-events-none fixed inset-0 z-0 opacity-40" />
+      <section className="relative z-10 mx-auto flex min-h-[75vh] w-full max-w-lg flex-col justify-center">
+        <div className="rounded-[2rem] border border-[#dce8d1] bg-[#fffdf5] p-7 shadow-[0_14px_30px_rgba(36,79,54,0.1)]" role="status">
+          <div className="h-4 w-28 animate-pulse rounded-full bg-[#dcebd4]" />
+          <p className="font-display mt-5 text-3xl tracking-[-0.05em] text-[#173f2e]">Loading research meal</p>
+          <p className="mt-3 text-[1rem] leading-7 text-[#5d7465]">Please wait while PlateFootprint checks the meal research record.</p>
+        </div>
+      </section>
+    </main>
+  );
+}
+
 export default function MealDetail() {
   const [, params] = useRoute("/meal/:id");
   const [, navigate] = useLocation();
   const [servings, setServings] = useState(MIN_SERVINGS);
   const { syncLog } = useMealCloudSync();
-  const { foods } = useCloudFoods();
+  const { foods, publishedMealsLoading } = useCloudFoods();
   const food = foods.find((item) => item.id === params?.id);
 
+  if (!food && publishedMealsLoading) return <MealLoading />;
   if (!food) return <MealNotFound navigate={navigate} />;
 
   const total = calculateTotalCarbonFootprint(food.carbonScore, servings);
   const band = getFootprintBand(food.carbonScore);
   const progress = getFootprintProgress(food.carbonScore);
   const servingText = servings === 1 ? "serving" : "servings";
+  const sourceUrl = food.sourceUrl ?? FOOD_DATA_SOURCE_URL;
+  const sourceNote = food.estimateMethod === "Published meal research"
+    ? "This value is from Singapore focused research and may vary according to portion size, ingredients, sourcing, recipe, and cooking method."
+    : food.estimateMethod === "Regional research dataset"
+      ? "This value is from a Pan Asian dish research dataset. It combines ingredient and cooking emissions and may vary from a Singapore recipe, portion, sourcing, and cooking method."
+      : "This is an ingredient based prototype estimate. It uses Singapore focused food examples and may vary according to portion size, ingredients, sourcing, recipe, and cooking method.";
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#f8f4e8] pb-28 text-[#163c2d]">
@@ -202,10 +225,11 @@ export default function MealDetail() {
           <span className="market-stamp mb-3 inline-flex items-center gap-1 bg-[#fffaf0] text-[#386146]"><ReceiptText className="size-3" aria-hidden="true" /> Research note</span>
           <h2 id="source-title" className="font-display text-2xl tracking-[-0.04em] text-[#214635]">Why the value can change</h2>
           <p className="mt-2">
-            {food.estimateMethod === "Published meal research" ? "This value is from Singapore focused research and may vary according to portion size, ingredients, sourcing, recipe, and cooking method." : "This is an ingredient based prototype estimate. It uses Singapore focused food examples and may vary according to portion size, ingredients, sourcing, recipe, and cooking method."}
+            {sourceNote}
           </p>
+          {food.sourceLabel && <p className="mt-3 rounded-xl bg-[#f4f0e4] px-3 py-2 text-xs font-bold text-[#496454]"><span className="font-extrabold">Source: </span>{food.sourceLabel}</p>}
           <a
-            href={FOOD_DATA_SOURCE_URL}
+            href={sourceUrl}
             target="_blank"
             rel="noreferrer"
             className="mt-4 inline-flex min-h-11 items-center gap-1 font-extrabold text-[#347349] underline decoration-[#94b989] underline-offset-4 hover:text-[#174a31] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2c7049]"
