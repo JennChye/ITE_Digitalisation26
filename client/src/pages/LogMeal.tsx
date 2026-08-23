@@ -4,6 +4,7 @@
  */
 import { Button } from "@/components/ui/button";
 import BottomNavigation from "@/components/BottomNavigation";
+import { startLogin } from "@/const";
 import { useCloudFoods } from "@/hooks/useCloudFoods";
 import { useMealCloudSync } from "@/hooks/useMealCloudSync";
 import {
@@ -14,6 +15,7 @@ import {
 } from "@/lib/cameraService";
 import { Food } from "@/lib/foodDatabase";
 import { addMealLog } from "@/lib/mealHistoryService";
+import { trpc } from "@/lib/trpc";
 import {
   MAX_ENTRY_SERVINGS,
   MEAL_ENTRY_OPTIONS,
@@ -29,11 +31,14 @@ import {
 } from "@/lib/mealEntryUtils";
 import { calculateTotalCarbonFootprint, formatCarbonFootprint } from "@/lib/mealFootprint";
 import { Camera, Check, ChevronLeft, ImageUp, Leaf, LoaderCircle, PencilLine, RefreshCw, Search, Sparkles, Trash2, Upload, X } from "lucide-react";
-import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import React, { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 
 type LogMode = "choose" | "camera" | "scanning" | "review" | "manual";
+type PhotoRecognitionResult =
+  | { status: "matched"; confidence: number; recognisedMeal: Food; ingredients: string[]; reviewNote: string }
+  | { status: "unclear"; confidence: number; candidateName: string; ingredients: string[]; reviewNote: string };
 const [cameraOptionLabel, manualOptionLabel] = MEAL_ENTRY_OPTIONS;
 const [retakePhotoLabel, enterManuallyLabel] = UNCLEAR_PHOTO_ACTIONS;
 
@@ -81,13 +86,30 @@ function EstimateCard({ food, servings }: { food: Food; servings: number }) {
   );
 }
 
+export function PhotoRecognitionFallback({ ingredients, reviewNote, onRetake, onManual }: { ingredients: string[]; reviewNote: string; onRetake: () => void; onManual: () => void }) {
+  return (
+    <div role="status" className="mt-4 rounded-2xl border border-[#efcabe] bg-[#fff3ee] p-4 text-[#823421]">
+      <p className="text-sm font-extrabold leading-6">We could not match this photo to a known dish with enough confidence.</p>
+      {ingredients.length > 0 && <p className="mt-2 text-sm leading-6 text-[#9a523d]">Possible visible ingredients: {ingredients.join(", ")}</p>}
+      <p className="mt-2 text-sm leading-6 text-[#9a523d]">{reviewNote}</p>
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <button type="button" onClick={onRetake} className="min-h-12 rounded-xl bg-[#d57448] px-3 text-sm font-extrabold text-white shadow-[0_3px_0_#a94f31] transition hover:bg-[#bd5b3b] active:translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#bd5439]"><RefreshCw className="mr-1.5 inline size-4" aria-hidden="true" />{retakePhotoLabel}</button>
+        <button type="button" onClick={onManual} className="min-h-12 rounded-xl border border-[#d7bfaf] bg-white px-3 text-sm font-extrabold text-[#78412f] transition hover:bg-[#fff9f6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#bd5439]"><PencilLine className="mr-1.5 inline size-4" aria-hidden="true" />{enterManuallyLabel}</button>
+      </div>
+    </div>
+  );
+}
+
 export default function LogMeal() {
   const [, navigate] = useLocation();
-  const { syncLog } = useMealCloudSync();
+  const { syncLog, isAuthenticated } = useMealCloudSync();
   const { foods } = useCloudFoods();
   const [mode, setMode] = useState<LogMode>("choose");
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
+  const [photoRecognition, setPhotoRecognition] = useState<PhotoRecognitionResult | null>(null);
+  const [scanError, setScanError] = useState<string | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [description, setDescription] = useState("");
@@ -100,9 +122,10 @@ export default function LogMeal() {
   const [manualError, setManualError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
+  const { mutate: scanPhoto } = trpc.mealRecognition.scan.useMutation();
 
   const recognition = useMemo(() => getPrototypeRecognition(description, foods), [description, foods]);
-  const reviewFood = selectedFoodId ? foods.find((food) => food.id === selectedFoodId) : recognition.kind === "match" ? recognition.food : undefined;
+  const reviewFood = selectedFoodId ? foods.find((food) => food.id === selectedFoodId) : photoRecognition?.status === "matched" ? foods.find((food) => food.id === photoRecognition.recognisedMeal.id) : recognition.kind === "match" ? recognition.food : undefined;
   const dishSearchResults = useMemo(() => searchSupportedFoods(dishSearch, foods), [dishSearch, foods]);
 
   useEffect(() => {
@@ -116,15 +139,40 @@ export default function LogMeal() {
   useEffect(() => () => deleteTemporaryPhoto(photoUrl), [photoUrl]);
   useEffect(() => {
     if (mode !== "scanning") return;
+    if (!photoDataUrl || !isAuthenticated) {
+      setScanError(isAuthenticated ? "We could not prepare this photo for recognition. Please try again or enter the meal manually." : "Please sign in before using photo recognition. You can still enter the meal manually.");
+      setMode("review");
+      return;
+    }
 
-    const timer = window.setTimeout(() => setMode("review"), 1800);
-    return () => window.clearTimeout(timer);
-  }, [mode]);
+    let cancelled = false;
+    scanPhoto({ imageDataUrl: photoDataUrl }, {
+      onSuccess: (result) => {
+        if (cancelled) return;
+        const safeResult = result as PhotoRecognitionResult;
+        setPhotoRecognition(safeResult);
+        if (safeResult.status === "matched") {
+          setSelectedFoodId(safeResult.recognisedMeal.id);
+          setDescription(safeResult.recognisedMeal.name);
+        }
+        window.setTimeout(() => !cancelled && setMode("review"), 550);
+      },
+      onError: () => {
+        if (cancelled) return;
+        setScanError("We could not recognise this meal photo. Please check the dish yourself or enter it manually.");
+        setMode("review");
+      },
+    });
+    return () => { cancelled = true; };
+  }, [isAuthenticated, mode, photoDataUrl, scanPhoto]);
 
   function clearPhoto() {
     stopCameraPreview(stream);
     setStream(null);
     setPhotoUrl(null);
+    setPhotoDataUrl(null);
+    setPhotoRecognition(null);
+    setScanError(null);
   }
 
   async function beginCamera() {
@@ -158,6 +206,7 @@ export default function LogMeal() {
         return;
       }
       setPhotoUrl(URL.createObjectURL(blob));
+      setPhotoDataUrl(canvas.toDataURL("image/jpeg", 0.76));
       stopCameraPreview(stream);
       setStream(null);
       setMode(PHOTO_CAPTURE_NEXT_MODE);
@@ -172,11 +221,25 @@ export default function LogMeal() {
       setUploadError("Please select an image file for the meal photo.");
       return;
     }
+    if (file.size > 4_500_000) {
+      setUploadError("Please choose a photo below 4.5 MB so it can be checked safely.");
+      return;
+    }
     clearPhoto();
     setUploadError(null);
     setCameraError(null);
-    setPhotoUrl(URL.createObjectURL(file));
-    setMode(PHOTO_CAPTURE_NEXT_MODE);
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== "string") {
+        setUploadError("We could not read this photo. Please try another image.");
+        return;
+      }
+      setPhotoUrl(URL.createObjectURL(file));
+      setPhotoDataUrl(reader.result);
+      setMode(PHOTO_CAPTURE_NEXT_MODE);
+    };
+    reader.onerror = () => setUploadError("We could not read this photo. Please try another image.");
+    reader.readAsDataURL(file);
   }
 
   function saveMeal(food: Food, entryMethod: "camera" | "manual") {
@@ -239,10 +302,10 @@ export default function LogMeal() {
           <>
             <SectionTitle eyebrow="Meal journal" title="Log a meal." text="Choose a photo or add your meal details yourself. You will always review the estimate before saving." />
             <section className="mt-7 space-y-4" aria-label="Choose a meal entry method">
-              <button type="button" onClick={beginCamera} className="group w-full rounded-[1.75rem] bg-[#1d563a] p-6 text-left text-white shadow-[0_16px_35px_rgba(23,65,47,0.16)] transition hover:-translate-y-1 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2c7049]">
+              <button type="button" onClick={() => isAuthenticated ? beginCamera() : startLogin()} className="group w-full rounded-[1.75rem] bg-[#1d563a] p-6 text-left text-white shadow-[0_16px_35px_rgba(23,65,47,0.16)] transition hover:-translate-y-1 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2c7049]">
                 <span className="flex size-14 items-center justify-center rounded-2xl bg-[#d6e8c8] text-[#1e593d] shadow-[0_4px_0_#a3c49c]"><Camera className="size-7" aria-hidden="true" /></span>
                 <span className="font-display mt-6 block text-4xl leading-none tracking-[-0.055em]">{cameraOptionLabel}</span>
-                <span className="mt-3 block max-w-sm text-sm leading-6 text-[#eaf3e3]">Use the device camera, then review a prototype estimate before you save.</span>
+                <span className="mt-3 block max-w-sm text-sm leading-6 text-[#eaf3e3]">{isAuthenticated ? "Use the device camera, then review a matched dish and ingredient check before saving." : "Sign in to use secure photo recognition. You can still enter meals manually."}</span>
               </button>
               <button type="button" onClick={() => { clearPhoto(); setManualError(null); setMode("manual"); }} className="group w-full rounded-[1.75rem] border border-[#dce8d1] bg-[#fffdf5] p-6 text-left shadow-[0_10px_24px_rgba(36,79,54,0.08)] transition hover:-translate-y-1 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2c7049]">
                 <span className="flex size-14 items-center justify-center rounded-2xl bg-[#f5dfae] text-[#896019] shadow-[0_4px_0_#e2c170]"><PencilLine className="size-7" aria-hidden="true" /></span>
@@ -285,16 +348,16 @@ export default function LogMeal() {
 
         {mode === "scanning" && (
           <>
-            <SectionTitle eyebrow="Prototype scan" title="Checking your meal." text="We are preparing a prototype estimate from your photo. Your photo stays only in this browser." />
+            <SectionTitle eyebrow="Photo recognition" title="Checking your meal." text="We are comparing visible food details with the known PlateFootprint dishes. You will review the result before saving." />
             <section className="relative mt-7 overflow-hidden rounded-[1.75rem] bg-[#143c2d] shadow-[0_16px_35px_rgba(23,65,47,0.2)]" aria-live="polite" aria-label="Prototype scan in progress">
               {photoUrl && <img src={photoUrl} alt="Meal photo being scanned" className="aspect-[4/3] w-full object-cover opacity-75" />}
               <div className="absolute inset-0 bg-gradient-to-b from-[#0d392140] via-transparent to-[#0d3922b8]" />
               <div className="photo-scan-line absolute inset-x-5 h-0.5 bg-[#d6e8c8] shadow-[0_0_16px_5px_rgba(214,232,200,0.55)]" aria-hidden="true" />
               <div className="absolute inset-5 rounded-2xl border border-[#d6e8c8]/70" aria-hidden="true" />
               <div className="absolute inset-x-0 bottom-0 p-6 text-white">
-                <span className="inline-flex items-center gap-2 rounded-full bg-[#d6e8c8] px-3 py-1.5 text-xs font-extrabold text-[#1e593d]"><LoaderCircle className="size-4 animate-spin" aria-hidden="true" />Scanning meal details</span>
-                <p className="font-display mt-4 text-3xl tracking-[-0.05em]">Looking for a familiar dish.</p>
-                <p className="mt-2 text-sm leading-6 text-[#eaf3e3]">This short scan is a prototype step. You can still change the result before saving.</p>
+                <span className="inline-flex items-center gap-2 rounded-full bg-[#d6e8c8] px-3 py-1.5 text-xs font-extrabold text-[#1e593d]"><LoaderCircle className="size-4 animate-spin" aria-hidden="true" />Checking meal and ingredients</span>
+                <p className="font-display mt-4 text-3xl tracking-[-0.05em]">Looking for a known dish.</p>
+                <p className="mt-2 text-sm leading-6 text-[#eaf3e3]">This is a prototype suggestion. You can change the dish and serving size before saving.</p>
               </div>
             </section>
           </>
@@ -302,11 +365,22 @@ export default function LogMeal() {
 
         {mode === "review" && (
           <>
-            <SectionTitle eyebrow="Review photo" title="Check this estimate." text="Photo recognition is an estimate. Please check the meal and serving size before saving." />
+            <SectionTitle eyebrow="Review photo" title="Check this estimate." text="Photo recognition is a suggestion. Please check the dish, visible ingredients, and serving size before saving." />
             {photoUrl && <img src={photoUrl} alt="Meal photo for review" className="mt-7 aspect-[4/3] w-full rounded-[1.75rem] object-cover shadow-[0_12px_28px_rgba(36,79,54,0.13)]" />}
             <section className="mt-5 rounded-[1.75rem] border border-[#dce8d1] bg-[#fffdf5] p-5 shadow-[0_10px_24px_rgba(36,79,54,0.08)]">
-              <label className="block"><span className="text-xs font-extrabold uppercase tracking-[0.13em] text-[#5a865c]">Describe the meal</span><input type="text" value={description} onChange={(event) => { setDescription(event.target.value); setSelectedFoodId(""); }} placeholder="Example: Chicken Rice" className="mt-2 min-h-13 w-full rounded-2xl border border-[#d5e2cd] bg-[#fffdf5] px-4 text-base font-bold text-[#214b35] outline-none focus-visible:ring-2 focus-visible:ring-[#2c7049]" /></label>
-              {recognition.kind === "unclear" ? (
+              <label className="block"><span className="text-xs font-extrabold uppercase tracking-[0.13em] text-[#5a865c]">Describe the meal</span><input type="text" value={description} onChange={(event) => { setDescription(event.target.value); setSelectedFoodId(""); setPhotoRecognition(null); }} placeholder="Example: Chicken Rice" className="mt-2 min-h-13 w-full rounded-2xl border border-[#d5e2cd] bg-[#fffdf5] px-4 text-base font-bold text-[#214b35] outline-none focus-visible:ring-2 focus-visible:ring-[#2c7049]" /></label>
+              {photoRecognition?.status === "matched" ? (
+                <div role="status" className="mt-4 rounded-2xl border border-[#c9dfc1] bg-[#edf5e8] p-4 text-[#24573a]">
+                  <p className="text-xs font-extrabold uppercase tracking-[0.13em] text-[#4f8055]">Closest database match · {photoRecognition.confidence}% confidence</p>
+                  <p className="font-display mt-2 text-3xl tracking-[-0.05em]">{photoRecognition.recognisedMeal.name}</p>
+                  {photoRecognition.ingredients.length > 0 && <><p className="mt-4 text-xs font-extrabold uppercase tracking-[0.13em] text-[#5f7f63]">Visible ingredients to check</p><ul className="mt-2 flex flex-wrap gap-2">{photoRecognition.ingredients.map((ingredient) => <li key={ingredient} className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#3d6348]">{ingredient}</li>)}</ul></>}
+                  <p className="mt-3 text-sm leading-6 text-[#486d52]">{photoRecognition.reviewNote}</p>
+                </div>
+              ) : photoRecognition?.status === "unclear" ? (
+                <PhotoRecognitionFallback ingredients={photoRecognition.ingredients} reviewNote={photoRecognition.reviewNote} onRetake={beginCamera} onManual={() => { clearPhoto(); setMode("manual"); }} />
+              ) : scanError ? (
+                <div role="alert" className="mt-4 rounded-2xl border border-[#efcabe] bg-[#fff3ee] p-4 text-[#823421]"><p className="text-sm font-extrabold leading-6">{scanError}</p>{!isAuthenticated && <button type="button" onClick={startLogin} className="mt-3 min-h-11 rounded-xl bg-[#216442] px-4 text-sm font-extrabold text-white shadow-[0_3px_0_#143e2a]">Sign in to scan</button>}</div>
+              ) : recognition.kind === "unclear" ? (
                 <div role="status" className="mt-3 rounded-2xl border border-[#efcabe] bg-[#fff3ee] p-4 text-[#823421]">
                   <p className="text-sm font-extrabold leading-6">{recognition.message}</p>
                   <p className="mt-2 text-sm leading-6 text-[#9a523d]">Try a clear photo from above with good lighting, or add the meal details yourself.</p>
@@ -317,7 +391,7 @@ export default function LogMeal() {
                 </div>
               ) : <p className="mt-3 rounded-xl bg-[#e9f2e2] px-4 py-3 text-sm leading-6 text-[#426553]">{recognition.message}</p>}
               <div className="mt-5 space-y-4">
-                <FoodSelector value={selectedFoodId || (recognition.kind === "match" ? recognition.food.id : "")} onChange={setSelectedFoodId} catalog={foods} label="Recognised meal" />
+                <FoodSelector value={selectedFoodId || (photoRecognition?.status === "matched" ? photoRecognition.recognisedMeal.id : recognition.kind === "match" ? recognition.food.id : "")} onChange={setSelectedFoodId} catalog={foods} label="Recognised meal" />
                 <ServingInput value={servings} onChange={setServings} error={validateEntryServings(servings)} />
               </div>
             </section>

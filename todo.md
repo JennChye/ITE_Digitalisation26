@@ -1,5 +1,12 @@
 # PlateFootprint Detail Page Tasks
 
+- [x] Define a safe photo recognition result with recognised ingredients and database match status.
+- [x] Add a server side vision procedure that keeps meal photos temporary.
+- [x] Match recognised meal names only to the known PlateFootprint database.
+- [x] Show recognised ingredients, confidence, and clear review options in the camera flow.
+- [x] Add and run tests for database matching and unclear photo fallbacks.
+- [x] Add a camera review test for unclear photo retake and manual entry recovery.
+
 - [x] Commit and push the completed PlateFootprint updates to GitHub.
 
 - [x] Verify every published dish level value available in the IPUR NUS article.
