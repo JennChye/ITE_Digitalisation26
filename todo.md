@@ -11,6 +11,15 @@
 - [x] Prepare camera and uploaded images at a reliable size before secure analysis.
 - [x] Improve the photo review details for both camera and uploaded images.
 - [x] Add and run tests for image analysis validation and clear recovery actions.
+- [x] Review current custom meal estimation and select transparent public carbon factor sources.
+- [x] Add a flexible ingredient based estimate for meals outside the supported dish list.
+- [x] Let manual and unclear photo entries continue with a flexible meal estimate.
+- [x] Show clear source, uncertainty, and prototype labels for flexible estimates.
+- [x] Add and run tests for flexible estimates and unsupported meal recovery.
+- [x] Test unsupported manual meal recovery into a prefilled flexible estimate.
+- [x] Test unclear photo recovery into a flexible estimate with visible ingredients.
+- [x] Test manual entry navigation into the flexible estimate screen.
+- [x] Test unclear photo navigation into the flexible estimate screen with detected ingredients.
 
 - [x] Commit and push the completed PlateFootprint updates to GitHub.
 

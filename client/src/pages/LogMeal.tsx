@@ -94,7 +94,7 @@ function PhotoQualityNote({ imageQuality }: { imageQuality: ImageQuality }) {
   return <p className="mt-3 rounded-xl bg-white/70 px-3 py-2 text-xs font-bold leading-5 text-[#785343]"><span className="font-extrabold">Photo check: </span>{message}</p>;
 }
 
-export function PhotoRecognitionFallback({ candidateName, imageQuality, ingredients, matchExplanation, reviewNote, onRetake, onManual }: { candidateName: string; imageQuality: ImageQuality; ingredients: string[]; matchExplanation: string; reviewNote: string; onRetake: () => void; onManual: () => void }) {
+export function PhotoRecognitionFallback({ candidateName, imageQuality, ingredients, matchExplanation, reviewNote, onRetake, onManual, onFlexibleEstimate }: { candidateName: string; imageQuality: ImageQuality; ingredients: string[]; matchExplanation: string; reviewNote: string; onRetake: () => void; onManual: () => void; onFlexibleEstimate: () => void }) {
   return (
     <div role="status" className="mt-4 rounded-2xl border border-[#efcabe] bg-[#fff3ee] p-4 text-[#823421]">
       <p className="text-sm font-extrabold leading-6">We could not match this photo to a known dish with enough confidence.</p>
@@ -107,8 +107,15 @@ export function PhotoRecognitionFallback({ candidateName, imageQuality, ingredie
         <button type="button" onClick={onRetake} className="min-h-12 rounded-xl bg-[#d57448] px-3 text-sm font-extrabold text-white shadow-[0_3px_0_#a94f31] transition hover:bg-[#bd5b3b] active:translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#bd5439]"><RefreshCw className="mr-1.5 inline size-4" aria-hidden="true" />{retakePhotoLabel}</button>
         <button type="button" onClick={onManual} className="min-h-12 rounded-xl border border-[#d7bfaf] bg-white px-3 text-sm font-extrabold text-[#78412f] transition hover:bg-[#fff9f6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#bd5439]"><PencilLine className="mr-1.5 inline size-4" aria-hidden="true" />{enterManuallyLabel}</button>
       </div>
+      <button type="button" onClick={onFlexibleEstimate} className="mt-3 min-h-12 w-full rounded-xl border border-[#d7bfaf] bg-[#fff9f6] px-3 text-sm font-extrabold text-[#78412f] transition hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#bd5439]"><Sparkles className="mr-1.5 inline size-4" aria-hidden="true" />Build a flexible estimate</button>
     </div>
   );
+}
+
+export function buildFlexibleEstimatePath(mealName: string, visibleIngredients: string[] = []): string {
+  const params = new URLSearchParams({ meal: mealName.trim() || "Custom meal" });
+  if (visibleIngredients.length > 0) params.set("ingredients", visibleIngredients.slice(0, 8).join("|"));
+  return `/custom-estimate?${params.toString()}`;
 }
 
 export default function LogMeal() {
@@ -186,6 +193,11 @@ export default function LogMeal() {
     setPhotoDataUrl(null);
     setPhotoRecognition(null);
     setScanError(null);
+  }
+
+  function openFlexibleEstimate(mealName: string, visibleIngredients: string[] = []) {
+    clearPhoto();
+    navigate(buildFlexibleEstimatePath(mealName, visibleIngredients));
   }
 
   async function beginCamera() {
@@ -408,7 +420,7 @@ export default function LogMeal() {
                   <p className="mt-3 text-sm leading-6 text-[#486d52]">{photoRecognition.reviewNote}</p>
                 </div>
               ) : photoRecognition?.status === "unclear" ? (
-                <PhotoRecognitionFallback candidateName={photoRecognition.candidateName} imageQuality={photoRecognition.imageQuality} ingredients={photoRecognition.ingredients} matchExplanation={photoRecognition.matchExplanation} reviewNote={photoRecognition.reviewNote} onRetake={beginCamera} onManual={() => { clearPhoto(); setMode("manual"); }} />
+                <PhotoRecognitionFallback candidateName={photoRecognition.candidateName} imageQuality={photoRecognition.imageQuality} ingredients={photoRecognition.ingredients} matchExplanation={photoRecognition.matchExplanation} reviewNote={photoRecognition.reviewNote} onRetake={beginCamera} onManual={() => { clearPhoto(); setMode("manual"); }} onFlexibleEstimate={() => openFlexibleEstimate(photoRecognition.candidateName, photoRecognition.ingredients)} />
               ) : scanError ? (
                 <div role="alert" className="mt-4 rounded-2xl border border-[#efcabe] bg-[#fff3ee] p-4 text-[#823421]"><p className="text-sm font-extrabold leading-6">{scanError}</p>{!isAuthenticated && <button type="button" onClick={startLogin} className="mt-3 min-h-11 rounded-xl bg-[#216442] px-4 text-sm font-extrabold text-white shadow-[0_3px_0_#143e2a]">Sign in to scan</button>}</div>
               ) : recognition.kind === "unclear" ? (
@@ -438,7 +450,7 @@ export default function LogMeal() {
 
         {mode === "manual" && (
           <>
-            <SectionTitle eyebrow="Manual entry" title="Add your meal details." text="Choose a supported dish to create an estimate. You can review everything before saving." />
+            <SectionTitle eyebrow="Manual entry" title="Add your meal details." text="Choose a supported dish or build a flexible ingredient estimate for any meal." />
             <section className="mt-7 space-y-5 rounded-[1.75rem] border border-[#dce8d1] bg-[#fffdf5] p-5 shadow-[0_10px_24px_rgba(36,79,54,0.08)]">
               <label className="block"><span className="text-xs font-extrabold uppercase tracking-[0.13em] text-[#5a865c]">Meal name</span><input type="text" value={manualName} onChange={(event) => { setManualName(event.target.value); setManualError(null); }} placeholder="Example: Chicken Rice" className="mt-2 min-h-13 w-full rounded-2xl border border-[#d5e2cd] bg-[#fffdf5] px-4 text-base font-bold text-[#214b35] outline-none focus-visible:ring-2 focus-visible:ring-[#2c7049]" /></label>
               <div>
@@ -454,7 +466,7 @@ export default function LogMeal() {
                       <span><span className="block font-extrabold">{food.name}</span><span className="mt-0.5 block text-xs font-bold text-[#697d6d]">{food.category}</span></span>
                       <span className="text-sm font-extrabold">{food.carbonScore.toFixed(2)} kg CO2e</span>
                     </button>
-                  )) : <p className="px-4 py-5 text-sm font-bold leading-6 text-[#7d5d50]">No supported dishes match this search. Try Chicken Rice or Laksa.</p>}
+                  )) : <p className="px-4 py-5 text-sm font-bold leading-6 text-[#7d5d50]">No supported dishes match this search. You can still build a flexible ingredient estimate below.</p>}
                 </div>
               </div>
               <ServingInput value={servings} onChange={(value) => { setServings(value); setManualError(null); }} error={validateEntryServings(servings)} />
@@ -462,7 +474,8 @@ export default function LogMeal() {
               {manualError && <p role="alert" className="rounded-xl bg-[#fff0ea] px-4 py-3 text-sm font-bold leading-6 text-[#8a3c29]">{manualError}</p>}
             </section>
             {(() => { const food = foods.find((item) => item.id === manualFoodId) ?? findSupportedFood(manualName, foods); return food && validateEntryServings(servings) === null ? <div className="mt-5"><EstimateCard food={food} servings={servings} /></div> : null; })()}
-            <Button onClick={saveManualEntry} className="mt-5 h-13 w-full rounded-2xl bg-[#216442] text-base font-extrabold text-white shadow-[0_4px_0_#143e2a] transition hover:bg-[#184d32] active:translate-y-0.5 active:shadow-[0_2px_0_#143e2a]">Save to Daily History</Button>
+            <Button onClick={saveManualEntry} className="mt-5 h-13 w-full rounded-2xl bg-[#216442] text-base font-extrabold text-white shadow-[0_4px_0_#143e2a] transition hover:bg-[#184d32] active:translate-y-0.5 active:shadow-[0_2px_0_#143e2a]">Save supported meal</Button>
+            <button type="button" onClick={() => { const flexibleMealName = manualName.trim() || dishSearch.trim(); if (!flexibleMealName) { setManualError("Please enter a meal name to build a flexible estimate."); return; } openFlexibleEstimate(flexibleMealName); }} className="mt-3 min-h-13 w-full rounded-2xl border border-[#d7b198] bg-[#fff8ed] px-4 text-base font-extrabold text-[#72452f] shadow-sm transition hover:bg-[#fffdf5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#a86a32]"><Sparkles className="mr-2 inline size-5" aria-hidden="true" />Build flexible estimate for this meal</button>
           </>
         )}
 

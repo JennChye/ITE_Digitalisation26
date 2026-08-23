@@ -1,14 +1,16 @@
 import { FoodCategory } from "./foodDatabase";
 import { MAX_ENTRY_SERVINGS, MIN_ENTRY_SERVINGS, validateEntryServings } from "./mealEntryUtils";
 
-export type CustomProteinId = "tofu" | "egg" | "chicken" | "fish" | "pork" | "beef";
+export type CustomProteinId = "tofu" | "egg" | "chicken" | "fish" | "pork" | "beef" | "lamb" | "prawns";
 export type CustomBaseId = "rice" | "noodles" | "none";
 export type CookingMethodId = "boiled" | "stir-fried" | "deep-fried" | "slow-cooked";
+export type IngredientFactorSource = "Singapore IPUR ingredient example" | "Global average ingredient factor";
 
 type EstimateOption<T extends string> = {
   id: T;
   label: string;
   carbonPer100g: number;
+  source: IngredientFactorSource;
 };
 
 type CookingOption<T extends string> = {
@@ -20,20 +22,23 @@ type CookingOption<T extends string> = {
 export const MIN_INGREDIENT_AMOUNT_GRAMS = 25;
 export const MAX_INGREDIENT_AMOUNT_GRAMS = 500;
 export const INGREDIENT_AMOUNT_STEP_GRAMS = 25;
+export const GLOBAL_INGREDIENT_FACTOR_SOURCE_URL = "https://ourworldindata.org/grapher/ghg-per-kg-poore";
 
 export const CUSTOM_PROTEINS: Array<EstimateOption<CustomProteinId> & { category: FoodCategory }> = [
-  { id: "tofu", label: "Tofu or beans", carbonPer100g: 0.3, category: "Vegetarian" },
-  { id: "egg", label: "Egg", carbonPer100g: 0.4, category: "Vegetarian" },
-  { id: "chicken", label: "Chicken", carbonPer100g: 0.4, category: "Non Vegetarian" },
-  { id: "fish", label: "Fish or seafood", carbonPer100g: 0.6, category: "Non Vegetarian" },
-  { id: "pork", label: "Pork", carbonPer100g: 1.2, category: "Non Vegetarian" },
-  { id: "beef", label: "Beef", carbonPer100g: 2.4, category: "Non Vegetarian" },
+  { id: "tofu", label: "Tofu or beans", carbonPer100g: 0.3, category: "Vegetarian", source: "Global average ingredient factor" },
+  { id: "egg", label: "Egg", carbonPer100g: 0.4, category: "Vegetarian", source: "Global average ingredient factor" },
+  { id: "chicken", label: "Chicken", carbonPer100g: 0.4, category: "Non Vegetarian", source: "Singapore IPUR ingredient example" },
+  { id: "fish", label: "Fish or seafood", carbonPer100g: 0.6, category: "Non Vegetarian", source: "Global average ingredient factor" },
+  { id: "pork", label: "Pork", carbonPer100g: 1.2, category: "Non Vegetarian", source: "Singapore IPUR ingredient example" },
+  { id: "beef", label: "Beef", carbonPer100g: 2.4, category: "Non Vegetarian", source: "Singapore IPUR ingredient example" },
+  { id: "lamb", label: "Lamb or mutton", carbonPer100g: 3.97, category: "Non Vegetarian", source: "Global average ingredient factor" },
+  { id: "prawns", label: "Prawns or shrimp", carbonPer100g: 2.69, category: "Non Vegetarian", source: "Global average ingredient factor" },
 ];
 
-export const CUSTOM_BASES: EstimateOption<CustomBaseId>[] = [
-  { id: "rice", label: "Rice", carbonPer100g: 0.23 },
-  { id: "noodles", label: "Noodles", carbonPer100g: 0.27 },
-  { id: "none", label: "No rice or noodles", carbonPer100g: 0 },
+export const CUSTOM_BASES: Array<EstimateOption<CustomBaseId>> = [
+  { id: "rice", label: "Rice", carbonPer100g: 0.23, source: "Global average ingredient factor" },
+  { id: "noodles", label: "Noodles", carbonPer100g: 0.27, source: "Global average ingredient factor" },
+  { id: "none", label: "No rice or noodles", carbonPer100g: 0, source: "Global average ingredient factor" },
 ];
 
 export const COOKING_METHODS: CookingOption<CookingMethodId>[] = [
@@ -43,9 +48,9 @@ export const COOKING_METHODS: CookingOption<CookingMethodId>[] = [
   { id: "slow-cooked", label: "Slow cooked", carbonPerServing: 0.35 },
 ];
 
-export const VEGETABLE_COMPONENT = { label: "Vegetables", carbonPer100g: 0.1 };
-export const COCONUT_DAIRY_COMPONENT = { label: "Coconut or dairy", carbonPer100g: 0.35 };
-export const CUSTOM_MEAL_NOTICE = "This is a custom prototype estimate based on your selected ingredients, amounts, and cooking method.";
+export const VEGETABLE_COMPONENT = { label: "Vegetables", carbonPer100g: 0.1, source: "Global average ingredient factor" as const };
+export const COCONUT_DAIRY_COMPONENT = { label: "Coconut or dairy", carbonPer100g: 0.35, source: "Global average ingredient factor" as const };
+export const CUSTOM_MEAL_NOTICE = "This is a custom prototype estimate. It uses ingredient factors, selected amounts, and cooking method, so it can vary with recipe and sourcing.";
 
 export type CustomMealInput = {
   mealName: string;
@@ -59,6 +64,10 @@ export type CustomMealInput = {
   vegetableAmountGrams: number;
   coconutOrDairyAmountGrams: number;
   servings: number;
+};
+
+export type CustomMealSuggestion = CustomMealInput & {
+  note: string;
 };
 
 export type CustomMealEstimate = {
@@ -83,6 +92,41 @@ function findCookingOption(id: CookingMethodId): CookingOption<CookingMethodId> 
   const option = COOKING_METHODS.find((item) => item.id === id);
   if (!option) throw new Error("Please choose a supported cooking method.");
   return option;
+}
+
+function includesKeyword(text: string, keywords: string[]): boolean {
+  return keywords.some((keyword) => text.includes(keyword));
+}
+
+export function createCustomMealSuggestion(mealName: string, visibleIngredients: string[] = []): CustomMealSuggestion {
+  const words = `${mealName} ${visibleIngredients.join(" ")}`.toLowerCase();
+  const proteinId: CustomProteinId = includesKeyword(words, ["beef", "rendang", "steak"]) ? "beef"
+    : includesKeyword(words, ["lamb", "mutton"]) ? "lamb"
+      : includesKeyword(words, ["prawn", "shrimp"]) ? "prawns"
+        : includesKeyword(words, ["pork", "char siew", "bak kut"]) ? "pork"
+          : includesKeyword(words, ["chicken", "ayam"]) ? "chicken"
+            : includesKeyword(words, ["fish", "seafood", "squid", "crab"]) ? "fish"
+              : includesKeyword(words, ["egg"]) ? "egg" : "tofu";
+  const baseId: CustomBaseId = includesKeyword(words, ["noodle", "mee", "bee hoon", "kway teow", "vermicelli", "pasta", "ramen"]) ? "noodles"
+    : includesKeyword(words, ["rice", "nasi", "biryani"]) ? "rice" : "none";
+  const cookingMethodId: CookingMethodId = includesKeyword(words, ["deep fried", "fried chicken", "fried fish"]) ? "deep-fried"
+    : includesKeyword(words, ["fried", "char", "goreng", "stir"]) ? "stir-fried"
+      : includesKeyword(words, ["curry", "rendang", "stew", "braised", "slow"]) ? "slow-cooked" : "boiled";
+
+  return {
+    mealName: mealName.trim() || "Custom meal",
+    proteinId,
+    baseId,
+    cookingMethodId,
+    includesVegetables: !includesKeyword(words, ["no vegetable", "without vegetable"]),
+    includesCoconutOrDairy: includesKeyword(words, ["coconut", "laksa", "curry", "cheese", "milk", "butter", "cream"]),
+    proteinAmountGrams: 100,
+    baseAmountGrams: baseId === "none" ? 0 : 150,
+    vegetableAmountGrams: 100,
+    coconutOrDairyAmountGrams: 100,
+    servings: 1,
+    note: "Starting choices were suggested from the meal name or visible ingredients. Please check and adjust every option.",
+  };
 }
 
 export function validateIngredientAmount(amount: number, label: string): string | null {

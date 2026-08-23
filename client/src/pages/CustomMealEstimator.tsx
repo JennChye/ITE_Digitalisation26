@@ -13,6 +13,7 @@ import {
   CUSTOM_BASES,
   CUSTOM_MEAL_NOTICE,
   CUSTOM_PROTEINS,
+  GLOBAL_INGREDIENT_FACTOR_SOURCE_URL,
   INGREDIENT_AMOUNT_STEP_GRAMS,
   MAX_INGREDIENT_AMOUNT_GRAMS,
   MIN_INGREDIENT_AMOUNT_GRAMS,
@@ -20,6 +21,7 @@ import {
   CustomBaseId,
   CustomProteinId,
   CookingMethodId,
+  createCustomMealSuggestion,
   createCustomMealId,
   estimateCustomMeal,
   validateCustomMealInput,
@@ -31,7 +33,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 
-type Choice = { id: string; label: string; carbonPer100g?: number; carbonPerServing?: number };
+type Choice = { id: string; label: string; carbonPer100g?: number; carbonPerServing?: number; source?: string };
 const CONTRIBUTION_COLORS = ["bg-[#d6e8c8]", "bg-[#f5dfae]", "bg-[#d7b198]", "bg-[#9cc6b8]", "bg-[#c6b6df]"];
 
 function ChoiceGroup({ label, options, value, onChange }: { label: string; options: Choice[]; value: string; onChange: (id: string) => void }) {
@@ -46,6 +48,7 @@ function ChoiceGroup({ label, options, value, onChange }: { label: string; optio
             <button key={option.id} type="button" role="radio" aria-checked={selected} onClick={() => onChange(option.id)} className={`min-h-13 rounded-xl border px-3 py-3 text-left transition active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2c7049] ${selected ? "border-[#6d9e69] bg-[#dcebd4] text-[#1c593b] shadow-[0_3px_0_#b5d2aa]" : "border-[#dbe6d3] bg-[#fffdf5] text-[#456653] hover:bg-[#eef5e9]"}`}>
               <span className="block text-sm font-extrabold leading-tight">{option.label}</span>
               <span className="mt-1 block text-xs font-bold opacity-80">{amountLabel}</span>
+              {option.source && <span className="mt-1 block text-[0.68rem] font-bold leading-4 opacity-75">{option.source}</span>}
             </button>
           );
         })}
@@ -70,20 +73,34 @@ function AmountControl({ label, value, onChange }: { label: string; value: numbe
   );
 }
 
+export function parseFlexibleEstimateSearch(search: string) {
+  const params = new URLSearchParams(search);
+  const mealName = params.get("meal")?.trim();
+  if (!mealName) return null;
+  const visibleIngredients = (params.get("ingredients") ?? "").split("|").map((ingredient) => ingredient.trim()).filter(Boolean).slice(0, 8);
+  return createCustomMealSuggestion(mealName, visibleIngredients);
+}
+
+function readSuggestedMeal() {
+  if (typeof window === "undefined") return null;
+  return parseFlexibleEstimateSearch(window.location.search);
+}
+
 export default function CustomMealEstimator() {
   const [, navigate] = useLocation();
   const { syncLog } = useMealCloudSync();
-  const [mealName, setMealName] = useState("");
-  const [proteinId, setProteinId] = useState<CustomProteinId>("tofu");
-  const [baseId, setBaseId] = useState<CustomBaseId>("rice");
-  const [cookingMethodId, setCookingMethodId] = useState<CookingMethodId>("boiled");
-  const [includesVegetables, setIncludesVegetables] = useState(true);
-  const [includesCoconutOrDairy, setIncludesCoconutOrDairy] = useState(false);
-  const [proteinAmountGrams, setProteinAmountGrams] = useState(100);
-  const [baseAmountGrams, setBaseAmountGrams] = useState(150);
-  const [vegetableAmountGrams, setVegetableAmountGrams] = useState(100);
-  const [coconutOrDairyAmountGrams, setCoconutOrDairyAmountGrams] = useState(100);
-  const [servings, setServings] = useState(1);
+  const [initialSuggestion] = useState(readSuggestedMeal);
+  const [mealName, setMealName] = useState(initialSuggestion?.mealName ?? "");
+  const [proteinId, setProteinId] = useState<CustomProteinId>(initialSuggestion?.proteinId ?? "tofu");
+  const [baseId, setBaseId] = useState<CustomBaseId>(initialSuggestion?.baseId ?? "rice");
+  const [cookingMethodId, setCookingMethodId] = useState<CookingMethodId>(initialSuggestion?.cookingMethodId ?? "boiled");
+  const [includesVegetables, setIncludesVegetables] = useState(initialSuggestion?.includesVegetables ?? true);
+  const [includesCoconutOrDairy, setIncludesCoconutOrDairy] = useState(initialSuggestion?.includesCoconutOrDairy ?? false);
+  const [proteinAmountGrams, setProteinAmountGrams] = useState(initialSuggestion?.proteinAmountGrams ?? 100);
+  const [baseAmountGrams, setBaseAmountGrams] = useState(initialSuggestion?.baseAmountGrams ?? 150);
+  const [vegetableAmountGrams, setVegetableAmountGrams] = useState(initialSuggestion?.vegetableAmountGrams ?? 100);
+  const [coconutOrDairyAmountGrams, setCoconutOrDairyAmountGrams] = useState(initialSuggestion?.coconutOrDairyAmountGrams ?? 100);
+  const [servings, setServings] = useState(initialSuggestion?.servings ?? 1);
   const [showErrors, setShowErrors] = useState(false);
 
   const input = { mealName, proteinId, baseId, cookingMethodId, includesVegetables, includesCoconutOrDairy, proteinAmountGrams, baseAmountGrams, vegetableAmountGrams, coconutOrDairyAmountGrams, servings };
@@ -127,6 +144,8 @@ export default function CustomMealEstimator() {
           <h1 className="font-display max-w-[12ch] text-5xl leading-[0.9] tracking-[-0.065em] text-[#143b2c]">Build your meal.</h1>
           <p className="mt-5 max-w-md text-[1rem] leading-7 text-[#567061]">Choose the main ingredients, their amount, and cooking style. This helps you estimate meals that are not in the dish list.</p>
         </section>
+
+        {initialSuggestion && <p role="status" className="mt-5 rounded-2xl border border-[#c9dfc1] bg-[#edf5e8] px-4 py-3 text-sm font-bold leading-6 text-[#315f42]">{initialSuggestion.note}</p>}
 
         <section className="mt-7 rounded-[1.75rem] border border-[#dce8d1] bg-[#fffdf5] p-5 shadow-[0_10px_24px_rgba(36,79,54,0.08)] sm:p-6">
           <label className="block">
@@ -186,7 +205,7 @@ export default function CustomMealEstimator() {
         <section className="receipt-note mt-6 px-5 py-5 text-sm leading-6 text-[#526c5a]">
           <p className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.13em] text-[#3d704d]"><Sparkles className="size-4" aria-hidden="true" /> Why this is a prototype</p>
           <p className="mt-2">The estimator uses rounded ingredient factors and your selected amounts. It is a learning tool and not a full recipe assessment.</p>
-          <a href={FOOD_DATA_SOURCE_URL} target="_blank" rel="noreferrer" className="mt-3 inline-flex min-h-11 items-center gap-1 font-extrabold text-[#347349] underline decoration-[#94b989] underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2c7049]">View data source <ArrowUpRight className="size-4" aria-hidden="true" /></a>
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1"><a href={FOOD_DATA_SOURCE_URL} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center gap-1 font-extrabold text-[#347349] underline decoration-[#94b989] underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2c7049]">Singapore examples <ArrowUpRight className="size-4" aria-hidden="true" /></a><a href={GLOBAL_INGREDIENT_FACTOR_SOURCE_URL} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center gap-1 font-extrabold text-[#347349] underline decoration-[#94b989] underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2c7049]">Global ingredient factors <ArrowUpRight className="size-4" aria-hidden="true" /></a></div>
         </section>
 
         <Button onClick={saveCustomMeal} className="mt-6 h-13 w-full rounded-2xl bg-[#d57448] text-base font-extrabold text-white shadow-[0_4px_0_#a94f31] transition hover:bg-[#bd5b3b] active:translate-y-0.5 active:shadow-[0_2px_0_#a94f31]">Save custom meal</Button>

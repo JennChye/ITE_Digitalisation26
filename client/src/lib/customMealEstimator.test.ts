@@ -1,4 +1,4 @@
-import { CUSTOM_MEAL_NOTICE, createCustomMealId, estimateCustomMeal, validateCustomMealInput } from "./customMealEstimator";
+import { CUSTOM_MEAL_NOTICE, createCustomMealId, createCustomMealSuggestion, estimateCustomMeal, validateCustomMealInput } from "./customMealEstimator";
 import { describe, expect, it } from "vitest";
 
 describe("Custom Meal Estimator", () => {
@@ -51,6 +51,14 @@ describe("Custom Meal Estimator", () => {
     expect(estimate.category).toBe("Non Vegetarian");
     expect(estimate.contributions.reduce((total, contribution) => total + contribution.carbonPerServing, 0)).toBe(3.67);
     expect(estimate.contributions.reduce((total, contribution) => total + contribution.percentage, 0)).toBe(100);
+  });
+
+  it("suggests editable ingredient settings from an unsupported meal name or visible ingredients", () => {
+    const prawnCurryMee = createCustomMealSuggestion("Prawn curry mee", ["prawns", "coconut milk", "noodles"]);
+    const lambRice = createCustomMealSuggestion("Mutton rice", ["lamb", "rice"]);
+
+    expect(prawnCurryMee).toMatchObject({ proteinId: "prawns", baseId: "noodles", cookingMethodId: "slow-cooked", includesCoconutOrDairy: true });
+    expect(lambRice).toMatchObject({ proteinId: "lamb", baseId: "rice" });
   });
 
   it("rejects missing meal names and invalid servings", () => {

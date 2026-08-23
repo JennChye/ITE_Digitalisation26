@@ -14,9 +14,13 @@ The Custom Meal Estimator is a classroom prototype, not a full life cycle assess
 
 Protein guidance uses the NUS IPUR examples where available: chicken is 0.4 kg CO2e per 100 g, pork is 1.2 kg CO2e per 100 g, and beef is 2.4 kg CO2e per 100 g. The global ingredient pattern is cross checked against the Our World in Data food footprint explorer, which presents greenhouse gas emissions per kilogram of food product.
 
+For flexible meals outside the listed dish records, PlateFootprint offers editable ingredient starting points. It uses the NUS IPUR examples above where available. Lamb or mutton at 3.97 kg CO2e per 100 g and prawns or shrimp at 2.69 kg CO2e per 100 g use global averages from the Our World in Data chart, adapted from Poore and Nemecek (2018). These factors are global averages and do not represent a Singapore recipe or a full life cycle assessment of a specific meal.
+
 The estimator scales its rounded ingredient components by user selected grams. This helps students see how portion amounts affect the result. Every output must remain labelled as a custom prototype estimate.
 
 Global ingredient context: https://ourworldindata.org/explorers/food-footprints
+
+Global ingredient factor data: https://ourworldindata.org/grapher/ghg-per-kg-poore
 
 ## Published IPUR NUS Dish Level Values
 
