@@ -9,8 +9,11 @@ import { startLogin } from "@/const";
 import { useCloudFoods } from "@/hooks/useCloudFoods";
 import { FOOD_DATA_SOURCE_URL } from "@/lib/foodDatabase";
 import { getFootprintBand } from "@/lib/mealFootprint";
+import { getSessionMealIds } from "@/lib/sessionMealPicker";
 import { trpc } from "@/lib/trpc";
 import { ArrowUpRight, BookOpenText, ChevronRight, CircleHelp, Cloud, Leaf, LogIn, Sprout } from "lucide-react";
+import React from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 
 function cardImpactText(carbonScore: number) {
@@ -26,10 +29,21 @@ export default function Home() {
   // startLogin() during render (no href={startLogin()}) — it mints a one-time
   // nonce cookie and must run only at the moment of navigation.
   const { isAuthenticated, logout } = useAuth();
-  const { foods } = useCloudFoods();
+  const { foods, publishedMealsLoading } = useCloudFoods();
   const topMeals = trpc.mealHistory.topFive.useQuery(undefined, { enabled: isAuthenticated });
+  const [sessionMealIds, setSessionMealIds] = useState<string[]>([]);
 
   const [, navigate] = useLocation();
+
+  useEffect(() => {
+    if (publishedMealsLoading || foods.length < 3) return;
+    setSessionMealIds(getSessionMealIds(foods, window.sessionStorage));
+  }, [foods, publishedMealsLoading]);
+
+  const sessionMeals = useMemo(
+    () => sessionMealIds.map((id) => foods.find((food) => food.id === id)).filter((food): food is typeof foods[number] => Boolean(food)),
+    [foods, sessionMealIds],
+  );
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#f8f4e8] pb-28 text-[#163c2d]">
@@ -72,17 +86,18 @@ export default function Home() {
 
         <section className="pt-9" aria-labelledby="meal-list-title">
           <div className="mb-4 flex items-end justify-between">
-            <div><p className="text-xs font-extrabold uppercase tracking-[0.15em] text-[#6a8a66]">Choose a dish</p><h2 id="meal-list-title" className="font-display mt-1 text-3xl tracking-[-0.05em] text-[#173d2d]">Start with your usual</h2></div>
-            <span className="rounded-full bg-[#e4efdc] px-3 py-1 text-xs font-bold text-[#44724b]">{foods.length} meals</span>
+            <div><p className="text-xs font-extrabold uppercase tracking-[0.15em] text-[#6a8a66]">Choose a dish</p><h2 id="meal-list-title" className="font-display mt-1 text-3xl tracking-[-0.05em] text-[#173d2d]">Three picks for this session</h2></div>
+            <span className="rounded-full bg-[#e4efdc] px-3 py-1 text-xs font-bold text-[#44724b]">3 of {foods.length} meals</span>
           </div>
 
-          <div className="space-y-4">
-            {foods.map((food, index) => {
+          <div className="space-y-4" aria-live="polite">
+            {sessionMeals.length === 3 ? sessionMeals.map((food, index) => {
               const band = getFootprintBand(food.carbonScore);
               return (
                 <button
                   key={food.id}
                   type="button"
+                  data-testid="session-meal-card"
                   onClick={() => navigate(`/meal/${food.id}`)}
                   className="meal-card group relative block min-h-48 w-full overflow-hidden rounded-[1.75rem] bg-[#fefcf4] text-left shadow-[0_10px_24px_rgba(36,79,54,0.1)] outline-offset-4 transition duration-200 hover:-translate-y-1 hover:shadow-[0_16px_30px_rgba(36,79,54,0.16)] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-[#2c7049]"
                   style={{ animationDelay: `${index * 65}ms` }}
@@ -100,7 +115,7 @@ export default function Home() {
                   </span>
                 </button>
               );
-            })}
+            }) : <div className="rounded-[1.75rem] border border-[#dce8d1] bg-[#fffdf5] p-5 text-sm font-bold text-[#577060]">Choosing three meals from the database for this session.</div>}
           </div>
         </section>
 
@@ -110,7 +125,7 @@ export default function Home() {
 
         <footer className="receipt-note relative mt-8 px-5 py-5 text-left text-xs leading-5 text-[#637467]">
           <span className="market-stamp mb-3 inline-flex items-center gap-1 bg-[#fffaf0] text-[#386146]"><BookOpenText className="size-3" aria-hidden="true" /> Source note</span>
-          <p className="max-w-md">Published meal scores are based on the IPUR NUS food carbon intensity article. Added dishes are clearly marked as ingredient based prototype estimates.</p>
+          <p className="max-w-md">Singapore research scores are based on the IPUR NUS food carbon intensity article. Regional research and prototype estimates are clearly labelled on each meal.</p>
           <a className="mt-3 inline-flex items-center gap-1 font-extrabold text-[#347349] underline decoration-[#94b989] underline-offset-4 hover:text-[#174a31] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2c7049]" href={FOOD_DATA_SOURCE_URL} target="_blank" rel="noreferrer">Read the source <ArrowUpRight className="size-3" aria-hidden="true" /></a>
         </footer>
       </div>

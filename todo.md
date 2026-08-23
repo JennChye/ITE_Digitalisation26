@@ -36,6 +36,11 @@
 - [x] Import more regional dishes with country, source record, and per serving values.
 - [x] Verify the expanded regional meal count, source details, and catalogue display.
 - [x] Add and run tests for the extended regional meal catalogue.
+- [x] Review main page meal rendering and define a session stable three dish selection.
+- [x] Show exactly three random database dishes on the main page for each new session.
+- [x] Add and run tests for the session meal picker and mobile display.
+- [x] Test the main page renders exactly three session meal cards and the total badge.
+- [x] Test the same session meal cards stay stable across main page rerenders.
 
 - [x] Commit and push the completed PlateFootprint updates to GitHub.
 
