@@ -71,6 +71,15 @@
 - [x] Add and run tests for teacher access, moderation reasons, and audit history privacy.
 - [x] Document secure teacher setup and moderation audit testing steps.
 - [x] Add dedicated secure teacher moderation setup and audit testing documentation.
+- [x] Review existing local meal and detail tracking to define private achievement triggers.
+- [x] Build local achievements, progress, optional feature settings, dietary preferences, and swap activity storage.
+- [x] Add private dashboard achievements and personal progress summary with supportive unlock feedback.
+- [x] Add preference aware sustainable swap recommendations and reliable comparison notes to meal details.
+- [x] Add a recorded tried swap action without assuming students completed a viewed recommendation.
+- [x] Add and run tests for achievements, preference filters, swap activity, privacy, and disabled states.
+- [x] Document the new files and manual tests for badges, swaps, preferences, activity, and settings.
+- [x] Show the original meal in every sustainable swap recommendation card.
+- [x] Add explicit tests that disabled badges do not stop meal logging and disabled swaps do not break meal details.
 
 - [x] Commit and push the completed PlateFootprint updates to GitHub.
 

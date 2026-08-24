@@ -3,6 +3,7 @@
  * Hawker Leaf Green accents, soft editorial type, and tap friendly meal cards.
  */
 import BottomNavigation from "@/components/BottomNavigation";
+import PositiveLearningDashboard from "@/components/PositiveLearningDashboard";
 import { TopMealSummary, TopMealsDashboard } from "@/components/TopMealsDashboard";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { startLogin } from "@/const";
@@ -83,6 +84,8 @@ export default function Home() {
         </section>
 
         <TopMealsDashboard isAuthenticated={isAuthenticated} isLoading={topMeals.isLoading} topMeals={(topMeals.data ?? []) as TopMealSummary[]} onLogMeal={() => navigate("/log")} onSignIn={startLogin} />
+
+        <PositiveLearningDashboard />
 
         <section className="pt-9" aria-labelledby="meal-list-title">
           <div className="mb-4 flex items-end justify-between">

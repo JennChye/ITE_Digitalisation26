@@ -6,6 +6,7 @@ import {
 } from "./mealFootprint";
 
 export const MEAL_HISTORY_STORAGE_KEY = "platefootprint-meal-history-v1";
+export const MEAL_HISTORY_EVENT = "platefootprint-meal-history-updated";
 export const EMPTY_HISTORY_MESSAGE = "No meals logged yet for this day. Choose a meal to start your journal.";
 export type EntryMethod = "camera" | "manual" | "custom";
 
@@ -20,6 +21,7 @@ export type MealLog = {
   localDate: string;
   category: FoodCategory;
   entryMethod: EntryMethod;
+  note?: string;
 };
 
 export type MealLogInput = Omit<MealLog, "id" | "totalCarbonFootprint" | "loggedAt" | "localDate" | "entryMethod"> & {
@@ -77,7 +79,8 @@ function isStoredMealLog(value: unknown): value is Omit<MealLog, "entryMethod"> 
     typeof log.loggedAt === "string" &&
     typeof log.localDate === "string" &&
     (log.category === "Vegetarian" || log.category === "Non Vegetarian") &&
-    (log.entryMethod === undefined || log.entryMethod === "camera" || log.entryMethod === "manual" || log.entryMethod === "custom")
+    (log.entryMethod === undefined || log.entryMethod === "camera" || log.entryMethod === "manual" || log.entryMethod === "custom") &&
+    (log.note === undefined || typeof log.note === "string")
   );
 }
 
@@ -87,6 +90,7 @@ function writeMealLogs(logs: MealLog[], storage?: StorageLike | null): void {
 
   try {
     targetStorage.setItem(MEAL_HISTORY_STORAGE_KEY, JSON.stringify(logs));
+    if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent(MEAL_HISTORY_EVENT));
   } catch {
     // Storage can be unavailable or full. The application continues with the current view state.
   }
@@ -123,6 +127,7 @@ export function addMealLog(input: MealLogInput, storage?: StorageLike | null): M
     localDate: getLocalDateKey(loggedAt),
     category: input.category,
     entryMethod: input.entryMethod ?? "manual",
+    note: input.note?.trim() || undefined,
   };
 
   const logs = readMealLogs(storage);

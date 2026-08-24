@@ -25,6 +25,9 @@ describe("community service", () => {
     const next = createSharedPost(publicState(), { displayName: "Green Explorer 24", mealsLogged: 4, weeklyFootprint: 8.2, message: "I explored a plant based lunch option." }, 123);
     expect(next.posts[0]).toMatchObject({ id: "own-123", isOwn: true, displayName: "Green Explorer 24", mealsLogged: 4, weeklyFootprint: 8.2 });
     expect(next.posts[0]).not.toHaveProperty("privateHistory");
+    expect(next.posts[0]).not.toHaveProperty("badges");
+    expect(next.posts[0]).not.toHaveProperty("achievementProgress");
+    expect(next.posts[0]).not.toHaveProperty("swapActivities");
   });
 
   it("deletes only an own shared post and hides a reported post from the current feed", () => {

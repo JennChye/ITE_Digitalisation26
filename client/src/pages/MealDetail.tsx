@@ -4,10 +4,12 @@
  */
 import { Button } from "@/components/ui/button";
 import BottomNavigation from "@/components/BottomNavigation";
+import SustainableSwapSection from "@/components/SustainableSwapSection";
 import { useCloudFoods } from "@/hooks/useCloudFoods";
 import { useMealCloudSync } from "@/hooks/useMealCloudSync";
 import { FOOD_DATA_SOURCE_URL, MEAL_NOT_FOUND_MESSAGE } from "@/lib/foodDatabase";
-import { addMealLog } from "@/lib/mealHistoryService";
+import { addMealLog, readMealLogs } from "@/lib/mealHistoryService";
+import { evaluateNewAchievements, recordMealDetailView } from "@/lib/positiveLearning";
 import {
   FOOTPRINT_SCALE_MAX,
   MIN_SERVINGS,
@@ -19,7 +21,7 @@ import {
 } from "@/lib/mealFootprint";
 import { ArrowLeft, ArrowUpRight, Leaf, Minus, Plus, ReceiptText, Sprout } from "lucide-react";
 import React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useLocation, useRoute } from "wouter";
 
@@ -78,6 +80,8 @@ export default function MealDetail() {
   const { syncLog } = useMealCloudSync();
   const { foods, publishedMealsLoading } = useCloudFoods();
   const food = foods.find((item) => item.id === params?.id);
+
+  useEffect(() => { if (food) recordMealDetailView(food.id); }, [food?.id]);
 
   if (!food && publishedMealsLoading) return <MealLoading />;
   if (!food) return <MealNotFound navigate={navigate} />;
@@ -198,13 +202,16 @@ export default function MealDetail() {
                 category: food.category,
               });
               syncLog(newLog);
-              toast.success("Meal added to Daily History");
+              const newBadges = evaluateNewAchievements(readMealLogs());
+              toast.success(newBadges.length ? "Meal added. You unlocked a new learning badge." : "Meal added to Daily History");
             }}
             className="mt-4 h-13 w-full rounded-2xl bg-[#d57448] text-base font-extrabold text-white shadow-[0_4px_0_#a94f31] transition hover:bg-[#bd5b3b] active:translate-y-0.5 active:shadow-[0_2px_0_#a94f31]"
           >
             Log This Meal
           </Button>
         </section>
+
+        <SustainableSwapSection food={food} />
 
         <section className="mt-6 rounded-[1.75rem] border border-[#dce8d1] bg-[#fffdf5] p-5 shadow-[0_10px_24px_rgba(36,79,54,0.08)] sm:p-6" aria-labelledby="factors-title">
           <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-[#5a865c]">How this is estimated</p>

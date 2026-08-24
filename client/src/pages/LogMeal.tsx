@@ -16,7 +16,8 @@ import {
   stopCameraPreview,
 } from "@/lib/cameraService";
 import { Food } from "@/lib/foodDatabase";
-import { addMealLog } from "@/lib/mealHistoryService";
+import { addMealLog, readMealLogs } from "@/lib/mealHistoryService";
+import { evaluateNewAchievements } from "@/lib/positiveLearning";
 import { trpc } from "@/lib/trpc";
 import {
   MAX_ENTRY_SERVINGS,
@@ -272,7 +273,7 @@ export default function LogMeal() {
     void preparePhotoForRecognition(file, "upload");
   }
 
-  function saveMeal(food: Food, entryMethod: "camera" | "manual") {
+  function saveMeal(food: Food, entryMethod: "camera" | "manual", note?: string) {
     const servingError = validateEntryServings(servings);
     if (servingError) {
       entryMethod === "manual" ? setManualError(servingError) : setCameraError(servingError);
@@ -285,10 +286,12 @@ export default function LogMeal() {
       servings,
       category: food.category,
       entryMethod,
+      note,
     });
     syncLog(newLog);
     clearPhoto();
-    toast.success("Meal added to Daily History");
+    const newBadges = evaluateNewAchievements(readMealLogs());
+    toast.success(newBadges.length ? "Meal added. You unlocked a new learning badge." : "Meal added to Daily History");
     navigate("/history");
   }
 
@@ -308,8 +311,7 @@ export default function LogMeal() {
       setManualError(UNSUPPORTED_MEAL_MESSAGE);
       return;
     }
-    void manualNotes;
-    saveMeal(matchedFood, "manual");
+    saveMeal(matchedFood, "manual", manualNotes);
   }
 
   function returnToChoices() {
