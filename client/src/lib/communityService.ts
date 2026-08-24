@@ -1,4 +1,6 @@
 export type CommunityPeriod = "week" | "month";
+export type ModerationStatus = "reported" | "restored" | "hidden";
+export type ModerationAction = "restore" | "hide" | "remove";
 
 export type CommunityPost = {
   id: string;
@@ -9,6 +11,7 @@ export type CommunityPost = {
   createdAt: number;
   isOwn: boolean;
   reported?: boolean;
+  moderationStatus?: ModerationStatus;
 };
 
 export type CommunitySettings = {
@@ -105,11 +108,28 @@ export function deleteSharedPost(state: CommunityState, postId: string): Communi
 }
 
 export function reportCommunityPost(state: CommunityState, postId: string): CommunityState {
-  return { ...state, posts: state.posts.map((post) => post.id === postId ? { ...post, reported: true } : post) };
+  return { ...state, posts: state.posts.map((post) => post.id === postId ? { ...post, reported: true, moderationStatus: "reported" } : post) };
 }
 
 export function getVisibleCommunityPosts(state: CommunityState): CommunityPost[] {
-  return state.posts.filter((post) => !post.reported);
+  return state.posts.filter((post) => !post.reported && post.moderationStatus !== "hidden");
+}
+
+export function getOpenModerationReports(state: CommunityState): CommunityPost[] {
+  return state.posts.filter((post) => post.reported || post.moderationStatus === "reported");
+}
+
+export function getResolvedModerationPosts(state: CommunityState): CommunityPost[] {
+  return state.posts.filter((post) => post.moderationStatus === "restored" || post.moderationStatus === "hidden");
+}
+
+export function moderateCommunityPost(state: CommunityState, postId: string, action: ModerationAction): CommunityState {
+  if (action === "remove") return { ...state, posts: state.posts.filter((post) => post.id !== postId) };
+  const moderationStatus: ModerationStatus = action === "restore" ? "restored" : "hidden";
+  return {
+    ...state,
+    posts: state.posts.map((post) => post.id === postId ? { ...post, reported: false, moderationStatus } : post),
+  };
 }
 
 export function participationScore(student: ParticipationStudent): number {

@@ -132,6 +132,11 @@ export default function StudentCommunity() {
           <p className="mt-3 text-xs leading-5 text-[#6a806f]">Joining is voluntary. Your name, contact details, photos, location, and private meal history are not shared here.</p>
         </section>
 
+        <section className="mt-6 grid gap-3 sm:grid-cols-2" aria-label="Community guides">
+          <button type="button" onClick={() => navigate("/community-safety")} className="min-h-24 rounded-[1.5rem] border border-[#dce8d1] bg-[#fffdf5] p-5 text-left shadow-[0_8px_20px_rgba(36,79,54,0.06)] transition hover:bg-[#f4f8ee] active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2c7049]"><ShieldCheck className="size-5 text-[#43804f]" aria-hidden="true" /><span className="mt-3 block font-display text-2xl tracking-[-0.04em] text-[#1b4934]">Safety rules</span><span className="mt-1 block text-xs font-bold leading-5 text-[#66806d]">Read before sharing.</span></button>
+          <button type="button" onClick={() => navigate("/teacher-moderation")} className="min-h-24 rounded-[1.5rem] border border-[#dce8d1] bg-[#fffdf5] p-5 text-left shadow-[0_8px_20px_rgba(36,79,54,0.06)] transition hover:bg-[#f4f8ee] active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2c7049]"><Flag className="size-5 text-[#b16a3b]" aria-hidden="true" /><span className="mt-3 block font-display text-2xl tracking-[-0.04em] text-[#1b4934]">Teacher review</span><span className="mt-1 block text-xs font-bold leading-5 text-[#66806d]">Prototype moderation view.</span></button>
+        </section>
+
         <section className="mt-6 rounded-[1.75rem] border border-[#dce8d1] bg-[#fffdf5] p-5 shadow-[0_10px_24px_rgba(36,79,54,0.08)]" aria-labelledby="post-form-title">
           <h2 id="post-form-title" className="font-display text-3xl tracking-[-0.05em]">Create an optional post</h2>
           <div className="mt-5 grid gap-4">

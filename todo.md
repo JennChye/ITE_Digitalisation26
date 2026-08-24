@@ -57,6 +57,13 @@
 - [x] Add and run tests for community privacy, posts, reporting, participation ranking, and fallback states.
 - [x] Document the files changed and manual community testing steps.
 - [x] Add the Student Community file summary and manual testing guide.
+- [x] Define local only teacher moderation status and actions for reported community posts.
+- [x] Build a teacher dashboard to review, restore, hide, and remove reported prototype posts.
+- [x] Create a dedicated student community safety rules and guidance page.
+- [x] Add clear navigation for community safety and teacher moderation without changing private meal history.
+- [x] Add and run tests for reported post moderation and safety page access.
+- [x] Document the teacher moderation and safety rules update with manual testing steps.
+- [x] Add dedicated teacher moderation and safety page testing documentation.
 
 - [x] Commit and push the completed PlateFootprint updates to GitHub.
 

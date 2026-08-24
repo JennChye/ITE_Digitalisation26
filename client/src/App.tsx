@@ -11,6 +11,8 @@ import CustomMealEstimator from "./pages/CustomMealEstimator";
 import LogMeal from "./pages/LogMeal";
 import MealDetail from "./pages/MealDetail";
 import StudentCommunity from "./pages/StudentCommunity";
+import CommunitySafety from "./pages/CommunitySafety";
+import TeacherModeration from "./pages/TeacherModeration";
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
@@ -21,6 +23,8 @@ function Router() {
       <Route path="/custom-estimate" component={CustomMealEstimator} />
       <Route path="/history" component={DailyHistory} />
       <Route path="/community" component={StudentCommunity} />
+      <Route path="/community-safety" component={CommunitySafety} />
+      <Route path="/teacher-moderation" component={TeacherModeration} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

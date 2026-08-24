@@ -1,0 +1,25 @@
+import BottomNavigation from "@/components/BottomNavigation";
+import { ArrowLeft, Flag, HeartHandshake, MapPinOff, ShieldCheck, UsersRound } from "lucide-react";
+import React from "react";
+import { useLocation } from "wouter";
+
+const rules = [
+  { icon: MapPinOff, title: "Keep personal details private", text: "Use an anonymous name. Do not share photos, phone numbers, email addresses, exact places, home details, or another person's information." },
+  { icon: HeartHandshake, title: "Share learning, not pressure", text: "Use positive words. Share what you learned about food choices without judging another student or comparing responsibility." },
+  { icon: ShieldCheck, title: "Choose what to share", text: "A post is optional. Check the preview first. Your private meal history is never copied into the community feed automatically." },
+  { icon: Flag, title: "Report a concern", text: "Use Report if a post feels unsafe, private, or unkind. The post is hidden from your current feed while the prototype teacher view can review it." },
+];
+
+export default function CommunitySafety() {
+  const [, navigate] = useLocation();
+  return (
+    <main className="min-h-screen bg-[#f8f4e8] pb-28 text-[#173d2d]"><div className="journal-grain pointer-events-none fixed inset-0 z-0 opacity-40" /><div className="relative z-10 mx-auto w-full max-w-2xl px-4 pb-10 pt-5 sm:px-6">
+      <header className="flex items-center justify-between gap-3"><button type="button" onClick={() => navigate("/community")} className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-[#d7e3cb] bg-[#fffdf5] px-4 text-sm font-extrabold text-[#21573a] shadow-sm hover:bg-[#eaf2df] active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2c7049]"><ArrowLeft className="size-4" aria-hidden="true" />Student Community</button><span className="flex size-11 items-center justify-center rounded-2xl bg-[#e5f0d9] text-[#276540] shadow-[0_4px_0_#bdd2a9]"><ShieldCheck className="size-5" aria-hidden="true" /></span></header>
+      <nav aria-label="Community safety menu" className="mt-5 flex gap-1 overflow-x-auto rounded-2xl border border-[#dce8d1] bg-[#fffdf5] p-1.5 text-xs font-extrabold text-[#50705b]"><button type="button" onClick={() => navigate("/community")} className="min-h-10 shrink-0 rounded-xl px-3 hover:bg-[#eaf2df] focus-visible:outline-2 focus-visible:outline-[#2c7049]">Community</button><span aria-current="page" className="flex min-h-10 shrink-0 items-center rounded-xl bg-[#216442] px-3 text-white">Safety rules</span><button type="button" onClick={() => navigate("/teacher-moderation")} className="min-h-10 shrink-0 rounded-xl px-3 hover:bg-[#eaf2df] focus-visible:outline-2 focus-visible:outline-[#2c7049]">Teacher review</button></nav>
+      <section className="pt-9"><p className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.15em] text-[#4a8058]"><span className="h-px w-7 bg-[#80ad76]" />Student Community</p><h1 className="font-display mt-3 max-w-[14ch] text-5xl leading-[0.9] tracking-[-0.065em] text-[#143b2c]">Safety rules for sharing.</h1><p className="mt-5 max-w-xl text-[1rem] leading-7 text-[#587260]">These simple rules help the community stay kind, private, and focused on learning together.</p></section>
+      <section className="mt-7 rounded-[2rem] bg-[#1d563a] p-6 text-[#f9f4e7]"><p className="text-xs font-extrabold uppercase tracking-[0.13em] text-[#d8e8ca]">Before you share</p><p className="font-display mt-2 text-3xl tracking-[-0.05em]">Pause, preview, then choose.</p><p className="mt-3 text-sm leading-6 text-[#edf4e7]">You can keep progress private. If you decide to post, read the preview and make sure it includes only the optional information you want to share.</p></section>
+      <section className="mt-7 space-y-4" aria-label="Community safety rules">{rules.map(({ icon: Icon, title, text }) => <article key={title} className="rounded-[1.5rem] border border-[#dce8d1] bg-[#fffdf5] p-5 shadow-[0_8px_20px_rgba(36,79,54,0.07)]"><div className="flex gap-4"><span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[#e5f0d9] text-[#2e6a43]"><Icon className="size-5" aria-hidden="true" /></span><div><h2 className="font-display text-2xl tracking-[-0.04em] text-[#1b4934]">{title}</h2><p className="mt-2 text-sm leading-6 text-[#587260]">{text}</p></div></div></article>)}</section>
+      <section className="mt-7 rounded-[1.75rem] border border-[#dce8d1] bg-[#fffdf5] p-5"><div className="flex items-start gap-3"><UsersRound className="mt-1 size-5 text-[#658e68]" aria-hidden="true" /><div><p className="text-xs font-extrabold uppercase tracking-[0.13em] text-[#6a8a66]">Need support?</p><h2 className="font-display mt-1 text-3xl tracking-[-0.05em]">Speak to a trusted adult.</h2><p className="mt-3 text-sm leading-6 text-[#587260]">If a post worries you or you need help, tell a trusted lecturer, counsellor, or school support adult. Do not try to manage a serious concern by yourself.</p></div></div></section>
+    </div><BottomNavigation /></main>
+  );
+}

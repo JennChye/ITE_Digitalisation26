@@ -5,8 +5,11 @@ import {
   createSharedPost,
   deleteSharedPost,
   getLeaderboard,
+  getOpenModerationReports,
+  getResolvedModerationPosts,
   getVisibleCommunityPosts,
   loadCommunityState,
+  moderateCommunityPost,
   participationScore,
   reportCommunityPost,
 } from "./communityService";
@@ -29,6 +32,21 @@ describe("community service", () => {
     expect(deleteSharedPost(shared, "sample-1").posts).toHaveLength(shared.posts.length);
     expect(deleteSharedPost(shared, "own-123").posts).toHaveLength(shared.posts.length - 1);
     expect(getVisibleCommunityPosts(reportCommunityPost(shared, "sample-1")).some((post) => post.id === "sample-1")).toBe(false);
+  });
+
+  it("lets a teacher restore, hide, or remove a reported prototype post", () => {
+    const reported = reportCommunityPost(publicState(), "sample-1");
+    expect(getOpenModerationReports(reported).map((post) => post.id)).toContain("sample-1");
+
+    const restored = moderateCommunityPost(reported, "sample-1", "restore");
+    expect(getVisibleCommunityPosts(restored).map((post) => post.id)).toContain("sample-1");
+    expect(getResolvedModerationPosts(restored).find((post) => post.id === "sample-1")?.moderationStatus).toBe("restored");
+
+    const hidden = moderateCommunityPost(reported, "sample-1", "hide");
+    expect(getVisibleCommunityPosts(hidden).map((post) => post.id)).not.toContain("sample-1");
+    expect(getResolvedModerationPosts(hidden).find((post) => post.id === "sample-1")?.moderationStatus).toBe("hidden");
+
+    expect(moderateCommunityPost(reported, "sample-1", "remove").posts.map((post) => post.id)).not.toContain("sample-1");
   });
 
   it("ranks students by positive participation instead of carbon footprint", () => {
