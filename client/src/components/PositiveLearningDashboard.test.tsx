@@ -23,4 +23,11 @@ describe("Positive Learning Dashboard", () => {
     fireEvent.click(screen.getByRole("button", { name: "Open badge collection" }));
     expect(openCollection).toHaveBeenCalledTimes(1);
   });
+
+  it("opens the optional private monthly reflection from the dashboard", () => {
+    const openReflection = vi.fn();
+    render(<PositiveLearningDashboard onOpenReflection={openReflection} />);
+    fireEvent.click(screen.getByRole("button", { name: "Open monthly reflection" }));
+    expect(openReflection).toHaveBeenCalledTimes(1);
+  });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { MealLog } from "./mealHistoryService";
-import { calculateAchievements, getFilteredRecommendations, readPositiveLearningState, recordRecommendationView, recordSwapActivity, recordMealDetailView, SINGAPORE_MEAL_IDS, SWAP_RECOMMENDATIONS, updateFoodPreferences } from "./positiveLearning";
+import { calculateAchievements, calculateMonthlyReflection, getFilteredRecommendations, readPositiveLearningState, recordRecommendationView, recordSwapActivity, recordMealDetailView, saveMonthlyReflectionNote, SINGAPORE_MEAL_IDS, SWAP_RECOMMENDATIONS, updateFoodPreferences } from "./positiveLearning";
 
 function storage() { const values = new Map<string, string>(); return { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => values.set(key, value) }; }
 function log(id: string, mealId: string, options: Partial<MealLog> = {}): MealLog { return { id, mealId, mealName: mealId, carbonFootprintPerServing: 1, servings: 1, totalCarbonFootprint: 1, loggedAt: "2026-08-24T08:00:00.000Z", localDate: "2026-08-24", category: "Vegetarian", entryMethod: "manual", ...options }; }
@@ -75,5 +75,18 @@ describe("positive private learning logic", () => {
 
   it("unlocks Waste Wise when a meal note describes avoiding waste", () => {
     expect(achievement("waste-wise", [log("1", "chicken-rice", { note: "Shared leftovers to avoid food waste" })]).earned).toBe(true);
+  });
+
+  it("summarises only the selected month using private meals, swaps, and badges", () => {
+    const target = storage();
+    recordSwapActivity({ originalMealId: "laksa", originalMealName: "Laksa", suggestedOption: "Vegetable noodle soup", loggedNewMeal: false, date: "2026-08-12T09:00:00.000Z" }, target);
+    const logs = [log("1", "chicken-rice", { localDate: "2026-08-02", totalCarbonFootprint: 3.13 }), log("2", "laksa", { localDate: "2026-08-12", totalCarbonFootprint: 6.53 }), log("3", "laksa", { localDate: "2026-09-01" })];
+    expect(calculateMonthlyReflection(logs, readPositiveLearningState(target), "2026-08")).toMatchObject({ mealCount: 2, totalCarbonFootprint: 9.66, uniqueMealCount: 2, daysLogged: 2, triedSwapCount: 1, topMealName: "chicken-rice" });
+  });
+
+  it("keeps an optional monthly reflection note in private local learning storage", () => {
+    const target = storage();
+    saveMonthlyReflectionNote("2026-08", "  I enjoyed trying more vegetables.  ", target);
+    expect(readPositiveLearningState(target).monthlyReflections[0]).toMatchObject({ month: "2026-08", note: "I enjoyed trying more vegetables." });
   });
 });

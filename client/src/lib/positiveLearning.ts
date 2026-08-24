@@ -5,10 +5,12 @@ export const POSITIVE_LEARNING_EVENT = "platefootprint-positive-learning-updated
 
 export type AchievementId = "first-plate" | "meal-explorer" | "local-food-learner" | "smart-swap-starter" | "weekly-tracker" | "waste-wise";
 export type Achievement = { id: AchievementId; title: string; description: string; target: number; progress: number; earned: boolean };
-export type PositiveLearningSettings = { badgesEnabled: boolean; recommendationsEnabled: boolean };
+export type PositiveLearningSettings = { badgesEnabled: boolean; recommendationsEnabled: boolean; monthlyReflectionEnabled: boolean };
 export type FoodPreferences = { vegetarianOnly: boolean; allergies: string[]; avoidedIngredients: string[]; culturalPreferences: string[] };
 export type SwapActivity = { id: string; date: string; originalMealId: string; originalMealName: string; suggestedOption: string; loggedNewMeal: boolean };
-export type PositiveLearningState = { settings: PositiveLearningSettings; preferences: FoodPreferences; viewedMealIds: string[]; viewedRecommendationIds: string[]; swapActivities: SwapActivity[]; celebratedBadgeIds: AchievementId[] };
+export type MonthlyReflectionNote = { month: string; note: string; updatedAt: string };
+export type MonthlyReflectionSummary = { month: string; mealCount: number; totalCarbonFootprint: number; uniqueMealCount: number; daysLogged: number; triedSwapCount: number; earnedBadgeCount: number; topMealName?: string; encouragement: string };
+export type PositiveLearningState = { settings: PositiveLearningSettings; preferences: FoodPreferences; viewedMealIds: string[]; viewedRecommendationIds: string[]; swapActivities: SwapActivity[]; celebratedBadgeIds: AchievementId[]; monthlyReflections: MonthlyReflectionNote[] };
 
 export type SwapRecommendation = { id: string; mealId: string; original: string; alternative: string; explanation: string; limitation: string; ingredients: string[]; vegetarian: boolean; culturalTags: string[]; comparisonReady: boolean };
 
@@ -45,12 +47,13 @@ type StorageLike = Pick<Storage, "getItem" | "setItem">;
 
 function emptyState(): PositiveLearningState {
   return {
-    settings: { badgesEnabled: true, recommendationsEnabled: true },
+    settings: { badgesEnabled: true, recommendationsEnabled: true, monthlyReflectionEnabled: true },
     preferences: { vegetarianOnly: false, allergies: [], avoidedIngredients: [], culturalPreferences: [] },
     viewedMealIds: [],
     viewedRecommendationIds: [],
     swapActivities: [],
     celebratedBadgeIds: [],
+    monthlyReflections: [],
   };
 }
 
@@ -69,7 +72,7 @@ function validState(value: unknown): PositiveLearningState {
   if (!value || typeof value !== "object") return fallback;
   const input = value as Partial<PositiveLearningState>;
   return {
-    settings: { badgesEnabled: input.settings?.badgesEnabled !== false, recommendationsEnabled: input.settings?.recommendationsEnabled !== false },
+    settings: { badgesEnabled: input.settings?.badgesEnabled !== false, recommendationsEnabled: input.settings?.recommendationsEnabled !== false, monthlyReflectionEnabled: input.settings?.monthlyReflectionEnabled !== false },
     preferences: {
       vegetarianOnly: input.preferences?.vegetarianOnly === true,
       allergies: normaliseList(input.preferences?.allergies),
@@ -80,6 +83,7 @@ function validState(value: unknown): PositiveLearningState {
     viewedRecommendationIds: normaliseList(input.viewedRecommendationIds),
     swapActivities: Array.isArray(input.swapActivities) ? input.swapActivities.filter((activity): activity is SwapActivity => Boolean(activity && typeof activity === "object" && typeof (activity as SwapActivity).id === "string" && typeof (activity as SwapActivity).date === "string" && typeof (activity as SwapActivity).originalMealId === "string" && typeof (activity as SwapActivity).originalMealName === "string" && typeof (activity as SwapActivity).suggestedOption === "string" && typeof (activity as SwapActivity).loggedNewMeal === "boolean")).slice(0, 100) : [],
     celebratedBadgeIds: normaliseList(input.celebratedBadgeIds).filter((id): id is AchievementId => ["first-plate", "meal-explorer", "local-food-learner", "smart-swap-starter", "weekly-tracker", "waste-wise"].includes(id)),
+    monthlyReflections: Array.isArray(input.monthlyReflections) ? input.monthlyReflections.filter((item): item is MonthlyReflectionNote => Boolean(item && typeof item === "object" && /^\d{4}-\d{2}$/.test((item as MonthlyReflectionNote).month) && typeof (item as MonthlyReflectionNote).note === "string" && typeof (item as MonthlyReflectionNote).updatedAt === "string")).map((item) => ({ ...item, note: item.note.trim().slice(0, 500) })).filter((item) => item.note).slice(0, 24) : [],
   };
 }
 
@@ -159,6 +163,27 @@ export function updatePositiveLearningSettings(settings: Partial<PositiveLearnin
 
 export function updateFoodPreferences(preferences: Partial<FoodPreferences>, storage?: StorageLike | null) {
   return updatePositiveLearningState((state) => ({ ...state, preferences: { ...state.preferences, ...preferences } }), storage);
+}
+
+export function getMonthKey(date: Date = new Date()): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+export function calculateMonthlyReflection(logs: MealLog[], state: PositiveLearningState, month: string): MonthlyReflectionSummary {
+  const monthlyLogs = logs.filter((log) => log.localDate.startsWith(`${month}-`));
+  const mealCounts = new Map<string, number>();
+  monthlyLogs.forEach((log) => mealCounts.set(log.mealName, (mealCounts.get(log.mealName) ?? 0) + 1));
+  const topMealName = Array.from(mealCounts.entries()).sort((first, second) => second[1] - first[1] || first[0].localeCompare(second[0]))[0]?.[0];
+  const mealCount = monthlyLogs.length;
+  const triedSwapCount = state.swapActivities.filter((activity) => activity.date.startsWith(month)).length;
+  const earnedBadgeCount = state.settings.badgesEnabled ? calculateAchievements(logs, state).filter((achievement) => achievement.earned).length : 0;
+  const encouragement = mealCount === 0 ? "There is no pressure to log every meal. Start with one meal when you feel ready." : triedSwapCount > 0 ? "You explored a meal swap this month. Keep choosing ideas that work for you." : "You built a picture of your meal choices this month. Notice one small idea you may want to explore.";
+  return { month, mealCount, totalCarbonFootprint: Number(monthlyLogs.reduce((total, log) => total + log.totalCarbonFootprint, 0).toFixed(2)), uniqueMealCount: new Set(monthlyLogs.map((log) => log.mealId)).size, daysLogged: new Set(monthlyLogs.map((log) => log.localDate)).size, triedSwapCount, earnedBadgeCount, topMealName, encouragement };
+}
+
+export function saveMonthlyReflectionNote(month: string, note: string, storage?: StorageLike | null) {
+  const cleanedNote = note.replace(/\s+/g, " ").trim().slice(0, 500);
+  return updatePositiveLearningState((state) => ({ ...state, monthlyReflections: cleanedNote ? [{ month, note: cleanedNote, updatedAt: new Date().toISOString() }, ...state.monthlyReflections.filter((item) => item.month !== month)].slice(0, 24) : state.monthlyReflections.filter((item) => item.month !== month) }), storage);
 }
 
 export function getFilteredRecommendations(mealId: string, preferences: FoodPreferences): SwapRecommendation[] {

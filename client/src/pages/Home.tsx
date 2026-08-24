@@ -85,7 +85,7 @@ export default function Home() {
 
         <TopMealsDashboard isAuthenticated={isAuthenticated} isLoading={topMeals.isLoading} topMeals={(topMeals.data ?? []) as TopMealSummary[]} onLogMeal={() => navigate("/log")} onSignIn={startLogin} />
 
-        <PositiveLearningDashboard onOpenCollection={() => navigate("/badges")} />
+        <PositiveLearningDashboard onOpenCollection={() => navigate("/badges")} onOpenReflection={() => navigate("/reflection")} />
 
         <section className="pt-9" aria-labelledby="meal-list-title">
           <div className="mb-4 flex items-end justify-between">

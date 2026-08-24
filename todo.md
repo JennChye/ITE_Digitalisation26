@@ -104,6 +104,13 @@
 - [x] Add and run tests for location validation, history editing, privacy, and cloud sync.
 - [x] Document private meal location recording and manual testing steps.
 - [x] Verify and record the private meal location flow, ownership safeguards, and mobile check.
+- [x] Review private meal history, badge, and sustainable learning data for a monthly reflection.
+- [x] Build local optional reflection preferences and reusable monthly summary logic.
+- [x] Create a private monthly reflection page with meal patterns, sustainable activity, and badge progress.
+- [x] Add an optional private navigation entry without sharing reflection data.
+- [x] Add and run tests for month selection, reflection privacy, badges, and empty states.
+- [x] Document monthly reflection manual testing and mobile verification steps.
+- [x] Verify and record monthly reflection privacy, note storage, and mobile checks.
 
 - [x] Commit and push the completed PlateFootprint updates to GitHub.
 

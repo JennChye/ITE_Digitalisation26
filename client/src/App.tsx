@@ -14,6 +14,7 @@ import StudentCommunity from "./pages/StudentCommunity";
 import CommunitySafety from "./pages/CommunitySafety";
 import TeacherModeration from "./pages/TeacherModeration";
 import BadgeCollection from "./pages/BadgeCollection";
+import MonthlyReflection from "./pages/MonthlyReflection";
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
@@ -27,6 +28,7 @@ function Router() {
       <Route path="/community-safety" component={CommunitySafety} />
       <Route path="/teacher-moderation" component={TeacherModeration} />
       <Route path="/badges" component={BadgeCollection} />
+      <Route path="/reflection" component={MonthlyReflection} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
