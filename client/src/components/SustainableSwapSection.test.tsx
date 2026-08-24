@@ -15,15 +15,15 @@ describe("Sustainable Swap Section", () => {
 
   it("does not claim a viewed recommendation was completed", () => {
     render(<SustainableSwapSection food={chickenRice} />);
-    expect(screen.getByText((_, element) => element?.textContent === "Starting from: Chicken Rice")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "View this option" }));
+    expect(screen.getAllByText((_, element) => element?.textContent === "Starting from: Chicken Rice")).toHaveLength(2);
+    fireEvent.click(screen.getAllByRole("button", { name: "View this option" })[0]);
     expect(screen.getByText(/viewing this idea does not mean you completed the swap/i)).toBeTruthy();
     expect(readPositiveLearningState().swapActivities).toHaveLength(0);
   });
 
   it("records a tried option and respects disabled recommendations", () => {
     const rendered = render(<SustainableSwapSection food={chickenRice} />);
-    fireEvent.click(screen.getByRole("button", { name: "View this option" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "View this option" })[0]);
     fireEvent.click(screen.getByRole("button", { name: "I tried this option" }));
     expect(readPositiveLearningState().swapActivities).toHaveLength(1);
     rendered.unmount();

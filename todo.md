@@ -91,6 +91,12 @@
 - [x] Add and run tests for dedicated badge access and Dashboard controls after the move.
 - [x] Document the dedicated badge page refinement and mobile check.
 - [x] Verify and record the dedicated badge page only flow and latest mobile visual check.
+- [x] Review current local Singapore meal and sustainable swap coverage for additional options.
+- [x] Add more transparent local Singapore swap ideas with ingredient and uncertainty details.
+- [x] Confirm new swaps respect vegetarian, allergy, avoided ingredient, and cultural filters.
+- [x] Add and run tests for new swap options and preference filtering.
+- [x] Document the expanded local meal swap options and mobile display check.
+- [x] Verify and record the local swap coverage, filtering safeguards, and mobile display check.
 
 - [x] Commit and push the completed PlateFootprint updates to GitHub.
 

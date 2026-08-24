@@ -54,11 +54,14 @@ describe("positive private learning logic", () => {
     expect(getFilteredRecommendations("laksa", readPositiveLearningState(target).preferences)).toEqual([]);
   });
 
-  it("offers a transparent local swap idea for every supported Singapore prototype meal", () => {
+  it("offers two transparent local swap ideas for every supported Singapore meal", () => {
     SINGAPORE_MEAL_IDS.forEach((mealId) => {
       const localOptions = getFilteredRecommendations(mealId, readPositiveLearningState().preferences);
-      expect(localOptions.length).toBeGreaterThan(0);
-      expect(localOptions[0].comparisonReady).toBe(false);
+      expect(localOptions.length).toBeGreaterThanOrEqual(2);
+      localOptions.forEach((option) => {
+        expect(option.comparisonReady).toBe(false);
+        expect(`${option.explanation} ${option.limitation}`).not.toMatch(/\d+\s*(kg|%|percent)/i);
+      });
     });
   });
 
