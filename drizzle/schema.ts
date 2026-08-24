@@ -6,7 +6,7 @@ export const users = mysqlTable("users", {
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  role: mysqlEnum("role", ["user", "teacher", "admin"]).default("user").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -46,7 +46,39 @@ export const userMealLogs = mysqlTable("userMealLogs", {
   index("userMealLogs_user_date_index").on(table.userId, table.localDate),
 ]);
 
+export const communityModerationCases = mysqlTable("communityModerationCases", {
+  id: int("id").autoincrement().primaryKey(),
+  postClientId: varchar("postClientId", { length: 96 }).notNull(),
+  displayName: varchar("displayName", { length: 40 }).notNull(),
+  mealsLogged: int("mealsLogged").notNull(),
+  weeklyFootprintHundredths: int("weeklyFootprintHundredths").notNull(),
+  message: varchar("message", { length: 180 }).notNull(),
+  reportedByUserId: int("reportedByUserId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  status: mysqlEnum("status", ["reported", "restored", "hidden", "removed"]).default("reported").notNull(),
+  reportedAt: timestamp("reportedAt").defaultNow().notNull(),
+  resolvedAt: timestamp("resolvedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => [
+  uniqueIndex("communityModerationCases_post_client_unique").on(table.postClientId),
+  index("communityModerationCases_status_reported_index").on(table.status, table.reportedAt),
+]);
+
+export const moderationAuditLogs = mysqlTable("moderationAuditLogs", {
+  id: int("id").autoincrement().primaryKey(),
+  moderationCaseId: int("moderationCaseId").notNull().references(() => communityModerationCases.id, { onDelete: "cascade" }),
+  teacherUserId: int("teacherUserId").notNull().references(() => users.id, { onDelete: "restrict" }),
+  action: mysqlEnum("action", ["restored", "hidden", "removed"]).notNull(),
+  reason: mysqlEnum("reason", ["private_information", "unkind_or_harmful", "off_topic", "safety_concern", "other"]).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  index("moderationAuditLogs_case_created_index").on(table.moderationCaseId, table.createdAt),
+  index("moderationAuditLogs_teacher_created_index").on(table.teacherUserId, table.createdAt),
+]);
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 export type PublishedMeal = typeof publishedMeals.$inferSelect;
 export type UserMealLog = typeof userMealLogs.$inferSelect;
+export type CommunityModerationCase = typeof communityModerationCases.$inferSelect;
+export type ModerationAuditLog = typeof moderationAuditLogs.$inferSelect;

@@ -35,3 +35,25 @@
 ## Checks completed
 
 The automated suite passed 85 tests. The production build passed. Both pages were checked at a 390 pixel mobile width.
+
+## Secure workspace visual check
+
+The protected teacher moderation page was checked at a 390 pixel mobile width. A teacher account can see the review queue and audit section. A signed out or standard student account sees the Teacher access only message instead of moderation data.
+
+## Secure teacher access setup
+
+Teacher access is checked on the server for every moderation request. The browser cannot grant this access. An administrator must update an approved staff account in the Users database so its `role` is `teacher`. Administrators also have teacher moderation access.
+
+After the role is updated, the teacher should sign out and sign in again. A standard student account must continue to see the Teacher access only message and must not see reports or audit entries.
+
+## Moderation reason and audit checks
+
+1. Sign in with an approved Teacher or Administrator account.
+2. Open a reported post. Select a reason before choosing Restore, Hide, or Remove.
+3. Confirm removal when using Remove post.
+4. Check that the audit history shows the action, reason, teacher, and time.
+5. Check that Hide or Remove removes the matching public post from the community feed. Restore allows it to appear again.
+
+## Latest checks completed
+
+The teacher role migration, moderation case table, and audit log table were applied. The full test suite passed 91 tests. The production build passed.

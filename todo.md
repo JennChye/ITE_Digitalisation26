@@ -64,6 +64,13 @@
 - [x] Add and run tests for reported post moderation and safety page access.
 - [x] Document the teacher moderation and safety rules update with manual testing steps.
 - [x] Add dedicated teacher moderation and safety page testing documentation.
+- [x] Review authentication and safely define the teacher role access model.
+- [x] Add protected server procedures and persistent tables for moderation actions and audit history.
+- [x] Require a clear moderation reason before hiding or removing a community post.
+- [x] Restrict the teacher moderation dashboard and audit history to authorised teachers.
+- [x] Add and run tests for teacher access, moderation reasons, and audit history privacy.
+- [x] Document secure teacher setup and moderation audit testing steps.
+- [x] Add dedicated secure teacher moderation setup and audit testing documentation.
 
 - [x] Commit and push the completed PlateFootprint updates to GitHub.
 

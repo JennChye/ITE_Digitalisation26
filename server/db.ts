@@ -1,6 +1,6 @@
 import { and, asc, desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, PublishedMeal, UserMealLog, publishedMeals, userMealLogs, users } from "../drizzle/schema";
+import { CommunityModerationCase, InsertUser, PublishedMeal, UserMealLog, communityModerationCases, moderationAuditLogs, publishedMeals, userMealLogs, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -189,4 +189,88 @@ export async function deleteUserMealLog(userId: number, id: number): Promise<boo
 export async function clearUserMealLogsForDate(userId: number, localDate: string): Promise<void> {
   const db = requireDatabase(await getDb());
   await db.delete(userMealLogs).where(and(eq(userMealLogs.userId, userId), eq(userMealLogs.localDate, localDate)));
+}
+
+export type ModerationReason = "private_information" | "unkind_or_harmful" | "off_topic" | "safety_concern" | "other";
+export type ModerationAction = "restored" | "hidden" | "removed";
+
+export type ModerationCaseInput = {
+  postClientId: string;
+  displayName: string;
+  mealsLogged: number;
+  weeklyFootprintHundredths: number;
+  message: string;
+};
+
+export type ModerationAuditRecord = {
+  id: number;
+  moderationCaseId: number;
+  displayName: string;
+  message: string;
+  action: ModerationAction;
+  reason: ModerationReason;
+  teacherName: string | null;
+  createdAt: Date;
+};
+
+export async function reportCommunityPost(userId: number, input: ModerationCaseInput): Promise<void> {
+  const db = requireDatabase(await getDb());
+  const now = new Date();
+  await db.insert(communityModerationCases).values({
+    ...input,
+    reportedByUserId: userId,
+    status: "reported",
+    reportedAt: now,
+    resolvedAt: null,
+  }).onDuplicateKeyUpdate({
+    set: {
+      displayName: input.displayName,
+      mealsLogged: input.mealsLogged,
+      weeklyFootprintHundredths: input.weeklyFootprintHundredths,
+      message: input.message,
+      reportedByUserId: userId,
+      status: "reported",
+      reportedAt: now,
+      resolvedAt: null,
+    },
+  });
+}
+
+export async function listOpenModerationCases(): Promise<CommunityModerationCase[]> {
+  const db = requireDatabase(await getDb());
+  return db.select().from(communityModerationCases).where(eq(communityModerationCases.status, "reported")).orderBy(desc(communityModerationCases.reportedAt));
+}
+
+export async function listHiddenCommunityPostIds(): Promise<string[]> {
+  const db = requireDatabase(await getDb());
+  const cases = await db.select({ postClientId: communityModerationCases.postClientId, status: communityModerationCases.status }).from(communityModerationCases);
+  return cases.filter((item) => item.status === "hidden" || item.status === "removed").map((item) => item.postClientId);
+}
+
+export async function resolveModerationCase(teacherUserId: number, moderationCaseId: number, action: ModerationAction, reason: ModerationReason): Promise<boolean> {
+  const db = requireDatabase(await getDb());
+  const status = action === "restored" ? "restored" : action === "hidden" ? "hidden" : "removed";
+  const result = await db.update(communityModerationCases).set({ status, resolvedAt: new Date() }).where(and(eq(communityModerationCases.id, moderationCaseId), eq(communityModerationCases.status, "reported")));
+  if (result[0].affectedRows === 0) return false;
+  await db.insert(moderationAuditLogs).values({ moderationCaseId, teacherUserId, action, reason });
+  return true;
+}
+
+export async function listModerationAudit(): Promise<ModerationAuditRecord[]> {
+  const db = requireDatabase(await getDb());
+  const records = await db.select({
+    id: moderationAuditLogs.id,
+    moderationCaseId: moderationAuditLogs.moderationCaseId,
+    displayName: communityModerationCases.displayName,
+    message: communityModerationCases.message,
+    action: moderationAuditLogs.action,
+    reason: moderationAuditLogs.reason,
+    teacherName: users.name,
+    createdAt: moderationAuditLogs.createdAt,
+  }).from(moderationAuditLogs)
+    .innerJoin(communityModerationCases, eq(moderationAuditLogs.moderationCaseId, communityModerationCases.id))
+    .innerJoin(users, eq(moderationAuditLogs.teacherUserId, users.id))
+    .orderBy(desc(moderationAuditLogs.createdAt))
+    .limit(50);
+  return records as ModerationAuditRecord[];
 }

@@ -4,6 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { mealHistoryRouter } from "./routers/mealHistory";
 import { mealRecognitionRouter } from "./routers/mealRecognition";
+import { moderationRouter } from "./routers/moderation";
 import { publishedMealsRouter } from "./routers/publishedMeals";
 
 export const appRouter = router({
@@ -22,6 +23,7 @@ export const appRouter = router({
   publishedMeals: publishedMealsRouter,
   mealHistory: mealHistoryRouter,
   mealRecognition: mealRecognitionRouter,
+  moderation: moderationRouter,
 });
 
 export type AppRouter = typeof appRouter;

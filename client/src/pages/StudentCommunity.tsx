@@ -1,4 +1,6 @@
 import BottomNavigation from "@/components/BottomNavigation";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { startLogin } from "@/const";
 import {
   COMMUNITY_STORAGE_ERROR,
   CommunityDraft,
@@ -17,6 +19,7 @@ import {
   validateCommunityDraft,
 } from "@/lib/communityService";
 import { formatCarbonFootprint } from "@/lib/mealFootprint";
+import { trpc } from "@/lib/trpc";
 import { ArrowLeft, Award, EyeOff, Flag, Heart, LogOut, ShieldCheck, Sparkles, Trash2, UsersRound } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
@@ -48,12 +51,19 @@ function CommunityPostCard({ post, onDelete, onReport }: { post: CommunityPost; 
 
 export default function StudentCommunity() {
   const [, navigate] = useLocation();
+  const { isAuthenticated } = useAuth();
   const [community, setCommunity] = useState<CommunityState>(() => createInitialCommunityState());
   const [draft, setDraft] = useState<CommunityDraft>(EMPTY_DRAFT);
   const [preview, setPreview] = useState<CommunityDraft | null>(null);
   const [draftError, setDraftError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [period, setPeriod] = useState<CommunityPeriod>("week");
+  const [reportNotice, setReportNotice] = useState<string | null>(null);
+  const reportForTeacher = trpc.moderation.report.useMutation({
+    onSuccess: () => setReportNotice("Your report was sent securely for teacher review. The post is hidden from your feed."),
+    onError: () => setReportNotice("The post is hidden from your feed. Sign in to send a report securely for teacher review."),
+  });
+  const hiddenPostIds = trpc.moderation.hiddenPostIds.useQuery();
 
   useEffect(() => {
     const loaded = loadCommunityState(window.localStorage);
@@ -71,7 +81,10 @@ export default function StudentCommunity() {
     }
   };
 
-  const visiblePosts = useMemo(() => getVisibleCommunityPosts(community), [community]);
+  const visiblePosts = useMemo(() => {
+    const blockedIds = new Set(hiddenPostIds.data ?? []);
+    return getVisibleCommunityPosts(community).filter((post) => !blockedIds.has(post.id));
+  }, [community, hiddenPostIds.data]);
   const leaderboard = useMemo(() => getLeaderboard(community, period), [community, period]);
   const ownPosition = leaderboard.findIndex((student) => student.isOwn);
 
@@ -94,6 +107,21 @@ export default function StudentCommunity() {
       setDraftError(error instanceof Error ? error.message : "Your post could not be shared.");
       setPreview(null);
     }
+  };
+
+  const reportPost = (post: CommunityPost) => {
+    updateCommunity(reportCommunityPost(community, post.id));
+    if (!isAuthenticated) {
+      setReportNotice("The post is hidden from your feed. Sign in to send a report securely for teacher review.");
+      return;
+    }
+    reportForTeacher.mutate({
+      postClientId: post.id,
+      displayName: post.displayName,
+      mealsLogged: post.mealsLogged,
+      weeklyFootprintHundredths: Math.round(post.weeklyFootprint * 100),
+      message: post.message,
+    });
   };
 
   return (
@@ -150,7 +178,7 @@ export default function StudentCommunity() {
 
         {preview && <section role="dialog" aria-modal="true" aria-labelledby="preview-title" className="mt-6 rounded-[1.75rem] border-2 border-[#89ad78] bg-[#f8fcef] p-5 shadow-[0_14px_30px_rgba(36,79,54,0.12)]"><p className="text-xs font-extrabold uppercase tracking-[0.13em] text-[#4a8058]">Preview before publishing</p><h2 id="preview-title" className="font-display mt-1 text-3xl tracking-[-0.05em]">Check what is shared.</h2><p className="mt-3 text-sm leading-6 text-[#5a725f]">Only the fields below will appear. Private meal history, photos, and location are not included.</p><div className="mt-4 rounded-2xl bg-white p-4"><p className="font-display text-2xl text-[#1b4934]">{preview.displayName}</p><p className="mt-1 text-xs font-bold text-[#6a806f]">{preview.mealsLogged} meals logged · {formatCarbonFootprint(preview.weeklyFootprint)} this week</p><p className="mt-3 text-sm leading-6 text-[#4f6958]">{preview.message}</p></div><div className="mt-5 flex flex-wrap gap-3"><button type="button" onClick={publish} className="min-h-12 rounded-xl bg-[#216442] px-5 text-sm font-extrabold text-white shadow-[0_3px_0_#143e2a] active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2c7049]">Confirm and publish</button><button type="button" onClick={() => setPreview(null)} className="min-h-12 rounded-xl border border-[#cbdacb] bg-white px-5 text-sm font-extrabold text-[#42634d] active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2c7049]">Edit post</button></div></section>}
 
-        <section className="mt-8" aria-labelledby="feed-title"><div className="flex items-end justify-between"><div><p className="text-xs font-extrabold uppercase tracking-[0.13em] text-[#6a8a66]">Community feed</p><h2 id="feed-title" className="font-display mt-1 text-3xl tracking-[-0.05em]">Small steps shared safely.</h2></div><span className="rounded-full bg-[#e4efdc] px-3 py-1 text-xs font-bold text-[#44724b]">{visiblePosts.length} posts</span></div><div className="mt-4 space-y-4">{visiblePosts.map((post) => <CommunityPostCard key={post.id} post={post} onDelete={() => updateCommunity(deleteSharedPost(community, post.id))} onReport={() => updateCommunity(reportCommunityPost(community, post.id))} />)}</div></section>
+        <section className="mt-8" aria-labelledby="feed-title"><div className="flex items-end justify-between"><div><p className="text-xs font-extrabold uppercase tracking-[0.13em] text-[#6a8a66]">Community feed</p><h2 id="feed-title" className="font-display mt-1 text-3xl tracking-[-0.05em]">Small steps shared safely.</h2></div><span className="rounded-full bg-[#e4efdc] px-3 py-1 text-xs font-bold text-[#44724b]">{visiblePosts.length} posts</span></div>{reportNotice && <div role="status" className="mt-4 rounded-xl bg-[#fff8e9] p-4 text-sm font-bold leading-6 text-[#805f2c]">{reportNotice}{!isAuthenticated && <button type="button" onClick={() => startLogin()} className="mt-3 block min-h-10 rounded-lg bg-[#216442] px-4 text-sm font-extrabold text-white active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2c7049]">Sign in for teacher review</button>}</div>}<div className="mt-4 space-y-4">{visiblePosts.map((post) => <CommunityPostCard key={post.id} post={post} onDelete={() => updateCommunity(deleteSharedPost(community, post.id))} onReport={() => reportPost(post)} />)}</div></section>
 
         <section className="mt-9 rounded-[1.75rem] border border-[#dce8d1] bg-[#fffdf5] p-5 shadow-[0_10px_24px_rgba(36,79,54,0.08)]" aria-labelledby="leaderboard-title"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-extrabold uppercase tracking-[0.13em] text-[#6a8a66]">Learning Together</p><h2 id="leaderboard-title" className="font-display mt-1 text-3xl tracking-[-0.05em]">Class Leaderboard</h2></div><Award className="size-7 text-[#c58a3d]" aria-hidden="true" /></div><p className="mt-4 rounded-2xl bg-[#f2f6ec] px-4 py-3 text-sm leading-6 text-[#506a58]">This leaderboard celebrates participation and learning. It does not judge food choices or compare personal environmental responsibility.</p><div className="mt-5 flex rounded-xl bg-[#edf3e8] p-1"><button type="button" aria-pressed={period === "week"} onClick={() => setPeriod("week")} className={`min-h-10 flex-1 rounded-lg text-sm font-extrabold ${period === "week" ? "bg-[#216442] text-white" : "text-[#52705a]"}`}>This Week</button><button type="button" aria-pressed={period === "month"} onClick={() => setPeriod("month")} className={`min-h-10 flex-1 rounded-lg text-sm font-extrabold ${period === "month" ? "bg-[#216442] text-white" : "text-[#52705a]"}`}>This Month</button></div>{community.settings.participatesInLeaderboard ? <p className="mt-4 rounded-xl bg-[#e8f2df] px-4 py-3 text-sm font-bold text-[#3f654b]">Your current position: {ownPosition + 1} of {leaderboard.length}. You can leave at any time using the privacy control above.</p> : <p className="mt-4 rounded-xl bg-[#fff8e9] px-4 py-3 text-sm font-bold text-[#805f2c]">You are not participating. You can join voluntarily using the privacy control above.</p>}<ol className="mt-5 space-y-3">{leaderboard.map((student, index) => <li key={student.id} className={`flex items-center justify-between gap-3 rounded-2xl p-4 ${student.isOwn ? "bg-[#e6f1dc]" : "bg-[#f7f7ef]"}`}><div className="flex items-center gap-3"><span className="flex size-9 items-center justify-center rounded-full bg-white text-sm font-extrabold text-[#496c55]">{index + 1}</span><div><p className="font-extrabold text-[#2b503a]">{student.displayName}{student.isOwn ? " · You" : ""}</p><p className="mt-0.5 text-xs font-bold text-[#6c8271]">{student.mealsLogged} meals · {student.sustainableSwapsExplored} swaps · {student.helpfulPostsShared} helpful posts</p></div></div><span className="rounded-full bg-white px-3 py-1 text-xs font-extrabold text-[#4c724f]">{participationScore(student)} points</span></li>)}</ol></section>
       </div>
