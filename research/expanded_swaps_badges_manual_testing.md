@@ -39,3 +39,9 @@ The private Badge Collection and Nasi Lemak meal detail pages were checked at 39
 ## Automated checks
 
 The full automated suite passed 110 tests. The production build passed.
+
+## Dedicated badge page refinement
+
+Achievement cards and progress counts are no longer displayed on Home. Home now has only a private badge collection entry beside the learning controls. All earned and locked badge details remain on the dedicated `/badges` page.
+
+The Home and Badge Collection pages were checked at 390 pixel mobile width after this refinement. The Dashboard keeps a compact collection entry, while all badge cards remain on the dedicated page.

@@ -86,6 +86,11 @@
 - [x] Add a dashboard entry and route for the badge collection without sharing progress.
 - [x] Add and run tests for expanded swaps, badge collection visibility, privacy, and navigation.
 - [x] Document new local swaps and badge collection manual testing steps.
+- [x] Review current Dashboard and private Badge Collection achievement rendering.
+- [x] Remove achievement cards and progress summary from Dashboard while keeping a private collection entry.
+- [x] Add and run tests for dedicated badge access and Dashboard controls after the move.
+- [x] Document the dedicated badge page refinement and mobile check.
+- [x] Verify and record the dedicated badge page only flow and latest mobile visual check.
 
 - [x] Commit and push the completed PlateFootprint updates to GitHub.
 
