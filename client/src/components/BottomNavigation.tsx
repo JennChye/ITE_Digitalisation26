@@ -1,11 +1,12 @@
 /** Hawker Market Journal style: a paper coloured mobile navigation bar with clear active section markers. */
-import { CalendarDays, House, PlusCircle } from "lucide-react";
+import { CalendarDays, House, PlusCircle, UsersRound } from "lucide-react";
 import { useLocation } from "wouter";
 
 const navigationItems = [
   { href: "/", label: "Home", icon: House },
   { href: "/log", label: "Log a Meal", icon: PlusCircle },
   { href: "/history", label: "Daily History", icon: CalendarDays },
+  { href: "/community", label: "Community", icon: UsersRound },
 ];
 
 export default function BottomNavigation() {
@@ -23,7 +24,7 @@ export default function BottomNavigation() {
               type="button"
               aria-current={active ? "page" : undefined}
               onClick={() => navigate(item.href)}
-              className={`flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-xl px-2 text-xs font-extrabold transition active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2c7049] sm:text-sm ${active ? "bg-[#216442] text-white shadow-[0_3px_0_#143e2a]" : "text-[#496a58] hover:bg-[#eaf2df]"}`}
+              className={`flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1.5 text-[0.65rem] font-extrabold leading-tight transition active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2c7049] sm:flex-row sm:gap-1.5 sm:px-2 sm:text-sm ${active ? "bg-[#216442] text-white shadow-[0_3px_0_#143e2a]" : "text-[#496a58] hover:bg-[#eaf2df]"}`}
             >
               <Icon className="size-4" aria-hidden="true" />
               {item.label}

@@ -50,6 +50,13 @@
 - [x] Link the final ten generated food images to their exact meal records.
 - [x] Verify every dish record has a linked image or intentional fallback removed.
 - [x] Test that an unmapped meal safely uses its visual gradient fallback.
+- [x] Define local only anonymous community data and keep it separate from private meal history.
+- [x] Build post preview, confirmation, privacy controls, delete, report, and positive reaction flows.
+- [x] Build a participation based anonymous leaderboard with week and month filters.
+- [x] Add the Student Community route and mobile navigation without disrupting private tracking pages.
+- [x] Add and run tests for community privacy, posts, reporting, participation ranking, and fallback states.
+- [x] Document the files changed and manual community testing steps.
+- [x] Add the Student Community file summary and manual testing guide.
 
 - [x] Commit and push the completed PlateFootprint updates to GitHub.
 
