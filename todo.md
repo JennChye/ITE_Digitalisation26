@@ -80,6 +80,12 @@
 - [x] Document the new files and manual tests for badges, swaps, preferences, activity, and settings.
 - [x] Show the original meal in every sustainable swap recommendation card.
 - [x] Add explicit tests that disabled badges do not stop meal logging and disabled swaps do not break meal details.
+- [x] Review current local swap coverage and private badge progress data.
+- [x] Add more transparent Singapore meal swap ideas with ingredient, preference, and uncertainty safeguards.
+- [x] Build a private badge collection page showing earned and locked supportive badges.
+- [x] Add a dashboard entry and route for the badge collection without sharing progress.
+- [x] Add and run tests for expanded swaps, badge collection visibility, privacy, and navigation.
+- [x] Document new local swaps and badge collection manual testing steps.
 
 - [x] Commit and push the completed PlateFootprint updates to GitHub.
 

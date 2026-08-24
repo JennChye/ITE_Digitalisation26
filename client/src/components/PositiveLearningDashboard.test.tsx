@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import React from "react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import PositiveLearningDashboard from "./PositiveLearningDashboard";
 
 describe("Positive Learning Dashboard", () => {
@@ -14,5 +14,12 @@ describe("Positive Learning Dashboard", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: "Turn learning badges on" }));
     expect(screen.queryByRole("heading", { name: "Achievements" })).toBeNull();
     expect(screen.getByText(/sustainable swaps/i)).toBeTruthy();
+  });
+
+  it("opens the private badge collection from the dashboard", () => {
+    const openCollection = vi.fn();
+    render(<PositiveLearningDashboard onOpenCollection={openCollection} />);
+    fireEvent.click(screen.getByRole("button", { name: "View my badge collection" }));
+    expect(openCollection).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { MealLog } from "./mealHistoryService";
-import { calculateAchievements, getFilteredRecommendations, readPositiveLearningState, recordRecommendationView, recordSwapActivity, recordMealDetailView, SWAP_RECOMMENDATIONS, updateFoodPreferences } from "./positiveLearning";
+import { calculateAchievements, getFilteredRecommendations, readPositiveLearningState, recordRecommendationView, recordSwapActivity, recordMealDetailView, SINGAPORE_MEAL_IDS, SWAP_RECOMMENDATIONS, updateFoodPreferences } from "./positiveLearning";
 
 function storage() { const values = new Map<string, string>(); return { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => values.set(key, value) }; }
 function log(id: string, mealId: string, options: Partial<MealLog> = {}): MealLog { return { id, mealId, mealName: mealId, carbonFootprintPerServing: 1, servings: 1, totalCarbonFootprint: 1, loggedAt: "2026-08-24T08:00:00.000Z", localDate: "2026-08-24", category: "Vegetarian", entryMethod: "manual", ...options }; }
@@ -52,6 +52,14 @@ describe("positive private learning logic", () => {
     const target = storage();
     updateFoodPreferences({ culturalPreferences: ["halal"] }, target);
     expect(getFilteredRecommendations("laksa", readPositiveLearningState(target).preferences)).toEqual([]);
+  });
+
+  it("offers a transparent local swap idea for every supported Singapore prototype meal", () => {
+    SINGAPORE_MEAL_IDS.forEach((mealId) => {
+      const localOptions = getFilteredRecommendations(mealId, readPositiveLearningState().preferences);
+      expect(localOptions.length).toBeGreaterThan(0);
+      expect(localOptions[0].comparisonReady).toBe(false);
+    });
   });
 
   it("records a tried swap without assuming the student logged it", () => {
