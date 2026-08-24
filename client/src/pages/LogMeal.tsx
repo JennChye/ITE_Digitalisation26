@@ -16,6 +16,7 @@ import {
   stopCameraPreview,
 } from "@/lib/cameraService";
 import { Food } from "@/lib/foodDatabase";
+import { FAVORITE_MEAL_PLACES_EVENT, FavoriteMealPlace, readFavoriteMealPlaces, removeFavoriteMealPlace, saveFavoriteMealPlace } from "@/lib/favoriteMealPlaces";
 import { addMealLog, readMealLogs } from "@/lib/mealHistoryService";
 import { evaluateNewAchievements } from "@/lib/positiveLearning";
 import { trpc } from "@/lib/trpc";
@@ -76,6 +77,11 @@ function ServingInput({ value, onChange, error }: { value: number; onChange: (va
       {error && <p id="serving-error" role="alert" className="mt-2 text-sm font-bold text-[#aa412e]">{error}</p>}
     </label>
   );
+}
+
+function FavoriteMealPlaceField({ value, onChange, places, onSave, onRemove }: { value: string; onChange: (value: string) => void; places: FavoriteMealPlace[]; onSave: (value: string) => void; onRemove: (id: string) => void }) {
+  const cleaned = value.trim();
+  return <label className="block"><span className="text-xs font-extrabold uppercase tracking-[0.13em] text-[#5a865c]">Where did you have it <span className="normal-case tracking-normal">optional and private</span></span><input aria-label="Where did you have it" value={value} onChange={(event) => onChange(event.target.value)} maxLength={120} placeholder="Example: ITE canteen, home, hawker centre" className="mt-2 min-h-13 w-full rounded-2xl border border-[#d5e2cd] bg-[#fffdf5] px-4 text-base font-bold text-[#214b35] outline-none focus-visible:ring-2 focus-visible:ring-[#2c7049]" />{places.length > 0 && <div className="mt-3"><p className="text-xs font-extrabold text-[#50795a]">Use a favourite place</p><div className="mt-2 flex flex-wrap gap-2">{places.map((place) => <span key={place.id} className="inline-flex overflow-hidden rounded-full border border-[#c8ddc3] bg-[#edf6e8]"><button type="button" onClick={() => onChange(place.label)} className="min-h-9 px-3 text-xs font-extrabold text-[#2e6541] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2c7049]">{place.label}</button><button type="button" aria-label={`Remove ${place.label} favourite place`} onClick={() => onRemove(place.id)} className="min-h-9 border-l border-[#c8ddc3] px-2 text-xs font-extrabold text-[#5a765f] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2c7049]"><X className="size-3" aria-hidden="true" /></button></span>)}</div></div>}{cleaned && <button type="button" onClick={() => onSave(cleaned)} className="mt-3 min-h-10 rounded-xl border border-[#bfd8b7] bg-[#eef6e9] px-3 text-xs font-extrabold text-[#2b6845] active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2c7049]">Save “{cleaned}” as favourite place</button>}<span className="mt-2 block text-xs leading-5 text-[#69806d]">Please do not enter a full address. Favourites stay only on this device and are not shared.</span></label>;
 }
 
 function EstimateCard({ food, servings }: { food: Food; servings: number }) {
@@ -139,6 +145,7 @@ export default function LogMeal() {
   const [dishSearch, setDishSearch] = useState("");
   const [manualNotes, setManualNotes] = useState("");
   const [mealLocation, setMealLocation] = useState("");
+  const [favoritePlaces, setFavoritePlaces] = useState<FavoriteMealPlace[]>(() => readFavoriteMealPlaces());
   const [manualError, setManualError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
@@ -158,6 +165,7 @@ export default function LogMeal() {
 
   useEffect(() => () => stopCameraPreview(stream), [stream]);
   useEffect(() => () => deleteTemporaryPhoto(photoUrl), [photoUrl]);
+  useEffect(() => { const refresh = () => setFavoritePlaces(readFavoriteMealPlaces()); window.addEventListener(FAVORITE_MEAL_PLACES_EVENT, refresh); return () => window.removeEventListener(FAVORITE_MEAL_PLACES_EVENT, refresh); }, []);
   useEffect(() => {
     if (mode !== "scanning") return;
     if (!photoDataUrl || !isAuthenticated) {
@@ -323,6 +331,15 @@ export default function LogMeal() {
     setMode("choose");
   }
 
+  function saveFavoritePlace(value: string) {
+    const place = saveFavoriteMealPlace(value);
+    if (place) { setFavoritePlaces(readFavoriteMealPlaces()); toast.success("Favourite meal place saved privately"); }
+  }
+
+  function removeFavoritePlace(id: string) {
+    setFavoritePlaces(removeFavoriteMealPlace(id));
+  }
+
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#f8f4e8] pb-28 text-[#163c2d]">
       <div className="journal-grain pointer-events-none fixed inset-0 z-0 opacity-40" />
@@ -440,7 +457,7 @@ export default function LogMeal() {
               <div className="mt-5 space-y-4">
                 <FoodSelector value={selectedFoodId || (photoRecognition?.status === "matched" ? photoRecognition.recognisedMeal.id : recognition.kind === "match" ? recognition.food.id : "")} onChange={setSelectedFoodId} catalog={foods} label="Recognised meal" />
                 <ServingInput value={servings} onChange={setServings} error={validateEntryServings(servings)} />
-                <label className="block"><span className="text-xs font-extrabold uppercase tracking-[0.13em] text-[#5a865c]">Where did you have it <span className="normal-case tracking-normal">optional and private</span></span><input value={mealLocation} onChange={(event) => setMealLocation(event.target.value)} maxLength={120} placeholder="Example: ITE canteen, home, hawker centre" className="mt-2 min-h-12 w-full rounded-2xl border border-[#d5e2cd] bg-[#fffdf5] px-4 text-base font-bold text-[#214b35] outline-none focus-visible:ring-2 focus-visible:ring-[#2c7049]" /><span className="mt-2 block text-xs leading-5 text-[#69806d]">Please do not enter a full address. This place is saved only in your private meal history.</span></label>
+                <FavoriteMealPlaceField value={mealLocation} onChange={setMealLocation} places={favoritePlaces} onSave={saveFavoritePlace} onRemove={removeFavoritePlace} />
               </div>
             </section>
             {reviewFood && validateEntryServings(servings) === null && <div className="mt-5"><EstimateCard food={reviewFood} servings={servings} /></div>}
@@ -475,7 +492,7 @@ export default function LogMeal() {
                 </div>
               </div>
               <ServingInput value={servings} onChange={(value) => { setServings(value); setManualError(null); }} error={validateEntryServings(servings)} />
-              <label className="block"><span className="text-xs font-extrabold uppercase tracking-[0.13em] text-[#5a865c]">Where did you have it <span className="normal-case tracking-normal">optional and private</span></span><input value={mealLocation} onChange={(event) => setMealLocation(event.target.value)} maxLength={120} placeholder="Example: ITE canteen, home, hawker centre" className="mt-2 min-h-13 w-full rounded-2xl border border-[#d5e2cd] bg-[#fffdf5] px-4 text-base font-bold text-[#214b35] outline-none focus-visible:ring-2 focus-visible:ring-[#2c7049]" /><span className="mt-2 block text-xs leading-5 text-[#69806d]">Please do not enter a full address. This place is saved only in your private meal history.</span></label>
+              <FavoriteMealPlaceField value={mealLocation} onChange={setMealLocation} places={favoritePlaces} onSave={saveFavoritePlace} onRemove={removeFavoritePlace} />
               <label className="block"><span className="text-xs font-extrabold uppercase tracking-[0.13em] text-[#5a865c]">Notes <span className="normal-case tracking-normal">optional</span></span><textarea value={manualNotes} onChange={(event) => setManualNotes(event.target.value)} placeholder="Example: Less rice, extra vegetables" rows={3} className="mt-2 w-full rounded-2xl border border-[#d5e2cd] bg-[#fffdf5] px-4 py-3 text-base text-[#214b35] outline-none focus-visible:ring-2 focus-visible:ring-[#2c7049]" /></label>
               {manualError && <p role="alert" className="rounded-xl bg-[#fff0ea] px-4 py-3 text-sm font-bold leading-6 text-[#8a3c29]">{manualError}</p>}
             </section>

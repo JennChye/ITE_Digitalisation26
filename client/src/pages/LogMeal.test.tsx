@@ -89,6 +89,18 @@ describe("flexible estimate navigation from Log a Meal", () => {
     expect(readMealLogs()[0]).toMatchObject({ mealName: "Chicken Rice", location: "ITE canteen" });
   });
 
+  it("saves and reuses a private favourite meal place during manual entry", () => {
+    render(<LogMeal />);
+    fireEvent.click(screen.getByRole("button", { name: /enter manually/i }));
+    const locationInput = screen.getByLabelText("Where did you have it") as HTMLInputElement;
+    fireEvent.change(locationInput, { target: { value: "ITE canteen" } });
+    fireEvent.click(screen.getByRole("button", { name: /save.*favourite place/i }));
+    fireEvent.change(locationInput, { target: { value: "" } });
+    fireEvent.click(screen.getByRole("button", { name: "ITE canteen" }));
+
+    expect(locationInput.value).toBe("ITE canteen");
+  });
+
   it("takes an unclear photo candidate and detected ingredients into a prefilled flexible estimate", async () => {
     mocks.mutate.mockImplementation((_input, options) => {
       options.onSuccess({

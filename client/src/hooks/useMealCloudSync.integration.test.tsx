@@ -2,6 +2,7 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MEAL_HISTORY_STORAGE_KEY, MealLog } from "@/lib/mealHistoryService";
+import { saveFavoriteMealPlace } from "@/lib/favoriteMealPlaces";
 import type { CloudLog } from "./useMealCloudSync";
 
 const state = vi.hoisted(() => ({
@@ -92,5 +93,17 @@ describe("useMealCloudSync integration", () => {
 
     act(() => rerender());
     expect(state.importMutate).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not include a browser local favourite place in the cloud meal import payload", async () => {
+    saveFavoriteMealPlace("Favourite hawker centre");
+    const { rerender } = renderHook(() => useMealCloudSync());
+    state.authenticated = true;
+    rerender();
+
+    await waitFor(() => expect(state.importMutate).toHaveBeenCalledTimes(1));
+    const importedPayload = state.importMutate.mock.calls[0][0];
+    expect(JSON.stringify(importedPayload)).not.toContain("Favourite hawker centre");
+    expect(importedPayload[0]).not.toHaveProperty("favoritePlaces");
   });
 });

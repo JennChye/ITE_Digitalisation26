@@ -111,6 +111,16 @@
 - [x] Add and run tests for month selection, reflection privacy, badges, and empty states.
 - [x] Document monthly reflection manual testing and mobile verification steps.
 - [x] Verify and record monthly reflection privacy, note storage, and mobile checks.
+- [x] Review private meal location and learning storage for favourite meal place boundaries.
+- [x] Add local favourite meal place storage with clear validation and a safe item limit.
+- [x] Add controls to save, reuse, and remove favourite meal places while logging meals.
+- [x] Add private history controls to save a recorded place as a favourite.
+- [x] Add and run tests for favourite place saving, reuse, removal, and privacy.
+- [x] Document favourite meal place manual testing and mobile verification steps.
+
+- [x] Add an automated privacy boundary test confirming favourite places stay browser local and do not enter cloud, community, badge, or reflection data.
+- [x] Add an automated test proving favourite places are excluded from cloud sync payloads.
+- [x] Add an automated test proving favourite places do not change community, badge, or monthly reflection storage.
 
 - [x] Commit and push the completed PlateFootprint updates to GitHub.
 

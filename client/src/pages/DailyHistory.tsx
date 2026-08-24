@@ -15,6 +15,7 @@ import {
 import BottomNavigation from "@/components/BottomNavigation";
 import { startLogin } from "@/const";
 import { useMealCloudSync } from "@/hooks/useMealCloudSync";
+import { FAVORITE_MEAL_PLACES_EVENT, FavoriteMealPlace, readFavoriteMealPlaces, removeFavoriteMealPlace, saveFavoriteMealPlace } from "@/lib/favoriteMealPlaces";
 import {
   MealLog,
   EMPTY_HISTORY_MESSAGE,
@@ -28,8 +29,8 @@ import {
   updateMealLogServings,
 } from "@/lib/mealHistoryService";
 import { formatCarbonFootprint, normaliseServings } from "@/lib/mealFootprint";
-import { CalendarDays, ChevronRight, Cloud, Leaf, LogIn, MapPin, Minus, Pencil, Plus, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { CalendarDays, ChevronRight, Cloud, Heart, Leaf, LogIn, MapPin, Minus, Pencil, Plus, Trash2, X } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 
 type Confirmation =
@@ -51,12 +52,16 @@ export default function DailyHistory() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingServings, setEditingServings] = useState(1);
   const [editingLocation, setEditingLocation] = useState("");
+  const [favoritePlaces, setFavoritePlaces] = useState<FavoriteMealPlace[]>(() => readFavoriteMealPlaces());
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
   const { isAuthenticated, logs: cloudLogs, historyLoading, updateCloudServings, updateCloudLocation, deleteCloudLog, clearCloudDate } = useMealCloudSync();
   const logs = isAuthenticated ? cloudLogs : localLogs;
 
   const dateLogs = useMemo(() => getLogsForDate(logs, selectedDate), [logs, selectedDate]);
   const summary = useMemo(() => calculateDailySummary(logs, selectedDate), [logs, selectedDate]);
+  useEffect(() => { const refresh = () => setFavoritePlaces(readFavoriteMealPlaces()); window.addEventListener(FAVORITE_MEAL_PLACES_EVENT, refresh); return () => window.removeEventListener(FAVORITE_MEAL_PLACES_EVENT, refresh); }, []);
+
+  function saveFavoritePlace(location: string) { const saved = saveFavoriteMealPlace(location); if (saved) setFavoritePlaces(readFavoriteMealPlaces()); }
 
   function startEditing(log: MealLog) {
     setEditingId(log.id);
@@ -114,6 +119,8 @@ export default function DailyHistory() {
           <div className="flex items-center gap-3"><span className={`flex size-10 items-center justify-center rounded-xl ${isAuthenticated ? "bg-[#d7ebce] text-[#276540]" : "bg-[#faebc8] text-[#976223]"}`}>{isAuthenticated ? <Cloud className="size-5" aria-hidden="true" /> : <LogIn className="size-5" aria-hidden="true" />}</span><p className="text-sm font-bold text-[#486351]">{isAuthenticated ? "Cloud sync is on. Your meal history can follow you across devices." : "Your meal history stays on this device until you sign in."}</p></div>
           {!isAuthenticated && <button type="button" onClick={startLogin} className="min-h-10 shrink-0 rounded-xl bg-[#216442] px-3 text-sm font-extrabold text-white shadow-[0_3px_0_#143e2a] active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2c7049]">Sign in</button>}
         </section>
+
+        {favoritePlaces.length > 0 && <section className="mt-5 rounded-[1.5rem] border border-[#cce0c5] bg-[#eff7eb] p-4" aria-label="Private favourite meal places"><div className="flex items-start gap-3"><span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#d7ebce] text-[#276540]"><Heart className="size-5" aria-hidden="true" /></span><div><p className="text-xs font-extrabold uppercase tracking-[0.13em] text-[#4f7a55]">Private favourite meal places</p><p className="mt-1 text-xs leading-5 text-[#5a765f]">These saved places stay on this device and are never shared.</p><div className="mt-3 flex flex-wrap gap-2">{favoritePlaces.map((place) => <span key={place.id} className="inline-flex overflow-hidden rounded-full border border-[#c8ddc3] bg-white"><span className="min-h-9 px-3 py-2 text-xs font-extrabold text-[#2e6541]">{place.label}</span><button type="button" aria-label={`Remove ${place.label} favourite place`} onClick={() => setFavoritePlaces(removeFavoriteMealPlace(place.id))} className="min-h-9 border-l border-[#c8ddc3] px-2 text-[#5a765f] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2c7049]"><X className="size-3" aria-hidden="true" /></button></span>)}</div></div></div></section>}
 
         <section className="mt-7 rounded-[1.75rem] border border-[#dce8d1] bg-[#fffdf5] p-5 shadow-[0_10px_24px_rgba(36,79,54,0.08)]" aria-label="Choose history date">
           <label htmlFor="history-date" className="text-xs font-extrabold uppercase tracking-[0.15em] text-[#5a865c]">Choose a date</label>
@@ -178,7 +185,7 @@ export default function DailyHistory() {
                         <p className="text-xs font-extrabold uppercase tracking-[0.13em] text-[#6c8770]">{formatLoggedTime(log.loggedAt)}</p>
                         <h3 className="font-display mt-1 text-3xl leading-none tracking-[-0.05em] text-[#173f2e]">{log.mealName}</h3>
                         <p className="mt-2 text-sm font-bold text-[#5f7668]">{log.category} · {log.entryMethod === "camera" ? "Photo estimate" : log.entryMethod === "custom" ? "Custom estimate" : "Manual entry"}</p>
-                        {log.location && <p className="mt-2 flex items-center gap-1.5 text-sm font-bold text-[#476854]"><MapPin className="size-4 text-[#4d875a]" aria-hidden="true" />{log.location}</p>}
+                        {log.location && <><p className="mt-2 flex items-center gap-1.5 text-sm font-bold text-[#476854]"><MapPin className="size-4 text-[#4d875a]" aria-hidden="true" />{log.location}</p><button type="button" onClick={() => saveFavoritePlace(log.location!)} className="mt-2 min-h-9 rounded-lg border border-[#c8ddc3] bg-[#eef6e9] px-3 text-xs font-extrabold text-[#2e6541] active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2c7049]"><Heart className="mr-1 inline size-3" aria-hidden="true" />Save as favourite place</button></>}
                       </div>
                       <button type="button" aria-label={`View ${log.mealName} details`} onClick={() => navigate(`/meal/${log.mealId}`)} className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#e6f0dc] text-[#1e593d] transition hover:bg-[#d6e8c8] active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2c7049]">
                         <ChevronRight className="size-5" aria-hidden="true" />
