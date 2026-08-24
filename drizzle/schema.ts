@@ -37,6 +37,7 @@ export const userMealLogs = mysqlTable("userMealLogs", {
   servings: int("servings").notNull(),
   category: mysqlEnum("category", ["Vegetarian", "Non Vegetarian"]).notNull(),
   entryMethod: mysqlEnum("entryMethod", ["camera", "manual", "custom"]).notNull(),
+  locationText: varchar("locationText", { length: 120 }),
   localDate: varchar("localDate", { length: 10 }).notNull(),
   loggedAt: timestamp("loggedAt").defaultNow().notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

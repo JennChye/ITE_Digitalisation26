@@ -6,6 +6,7 @@ const dbMock = vi.hoisted(() => ({
   deleteUserMealLog: vi.fn(),
   listUserMealLogs: vi.fn(),
   listUserTopMeals: vi.fn(),
+  updateUserMealLogLocation: vi.fn(),
   updateUserMealLogServings: vi.fn(),
   upsertUserMealLog: vi.fn(),
 }));
@@ -63,11 +64,12 @@ describe("mealHistory cloud access", () => {
       servings: 1,
       category: "Non Vegetarian",
       entryMethod: "manual",
+      locationText: "ITE canteen",
       localDate: "2026-08-23",
       loggedAt: new Date("2026-08-23T08:00:00.000Z"),
     });
 
-    expect(dbMock.upsertUserMealLog).toHaveBeenCalledWith(23, expect.objectContaining({ mealName: "Chicken Rice" }));
+    expect(dbMock.upsertUserMealLog).toHaveBeenCalledWith(23, expect.objectContaining({ mealName: "Chicken Rice", locationText: "ITE canteen" }));
   });
 
   it("imports local records using the signed in user id for a new session", async () => {
@@ -93,15 +95,18 @@ describe("mealHistory cloud access", () => {
 
   it("uses the signed in owner for edit, delete, and clear day actions", async () => {
     dbMock.updateUserMealLogServings.mockResolvedValue(true);
+    dbMock.updateUserMealLogLocation.mockResolvedValue(true);
     dbMock.deleteUserMealLog.mockResolvedValue(true);
     dbMock.clearUserMealLogsForDate.mockResolvedValue(undefined);
     const caller = mealHistoryRouter.createCaller(contextForUser(41));
 
     await caller.updateServings({ id: 9, servings: 3 });
+    await caller.updateLocation({ id: 9, locationText: "Home" });
     await caller.delete({ id: 9 });
     await caller.clearDate({ localDate: "2026-08-23" });
 
     expect(dbMock.updateUserMealLogServings).toHaveBeenCalledWith(41, 9, 3);
+    expect(dbMock.updateUserMealLogLocation).toHaveBeenCalledWith(41, 9, "Home");
     expect(dbMock.deleteUserMealLog).toHaveBeenCalledWith(41, 9);
     expect(dbMock.clearUserMealLogsForDate).toHaveBeenCalledWith(41, "2026-08-23");
   });

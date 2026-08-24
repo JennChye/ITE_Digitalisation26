@@ -1,0 +1,1 @@
+ALTER TABLE `userMealLogs` ADD `locationText` varchar(120);

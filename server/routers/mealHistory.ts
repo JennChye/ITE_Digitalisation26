@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { clearUserMealLogsForDate, deleteUserMealLog, listUserMealLogs, listUserTopMeals, updateUserMealLogServings, upsertUserMealLog } from "../db";
+import { clearUserMealLogsForDate, deleteUserMealLog, listUserMealLogs, listUserTopMeals, updateUserMealLogLocation, updateUserMealLogServings, upsertUserMealLog } from "../db";
 import { protectedProcedure, router } from "../_core/trpc";
 
 const cloudMealInput = z.object({
@@ -10,6 +10,7 @@ const cloudMealInput = z.object({
   servings: z.number().int().min(1).max(20),
   category: z.enum(["Vegetarian", "Non Vegetarian"]),
   entryMethod: z.enum(["camera", "manual", "custom"]),
+  locationText: z.string().trim().min(1).max(120).optional(),
   localDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   loggedAt: z.date(),
 });
@@ -27,6 +28,9 @@ export const mealHistoryRouter = router({
   }),
   updateServings: protectedProcedure.input(z.object({ id: z.number().int().positive(), servings: z.number().int().min(1).max(20) })).mutation(async ({ ctx, input }) => ({
     success: await updateUserMealLogServings(ctx.user.id, input.id, input.servings),
+  })),
+  updateLocation: protectedProcedure.input(z.object({ id: z.number().int().positive(), locationText: z.string().trim().min(1).max(120).nullable() })).mutation(async ({ ctx, input }) => ({
+    success: await updateUserMealLogLocation(ctx.user.id, input.id, input.locationText),
   })),
   delete: protectedProcedure.input(z.object({ id: z.number().int().positive() })).mutation(async ({ ctx, input }) => ({
     success: await deleteUserMealLog(ctx.user.id, input.id),

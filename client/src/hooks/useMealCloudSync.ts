@@ -13,6 +13,7 @@ export type CloudLog = {
   servings: number;
   category: "Vegetarian" | "Non Vegetarian";
   entryMethod: "camera" | "manual" | "custom";
+  locationText?: string | null;
   localDate: string;
   loggedAt: Date;
 };
@@ -26,6 +27,7 @@ export function toCloudLog(log: MealLog) {
     servings: log.servings,
     category: log.category,
     entryMethod: log.entryMethod,
+    locationText: log.location,
     localDate: log.localDate,
     loggedAt: new Date(log.loggedAt),
   };
@@ -44,6 +46,7 @@ export function fromCloudLog(log: CloudLog): MealLog {
     localDate: log.localDate,
     category: log.category,
     entryMethod: log.entryMethod,
+    location: log.locationText ?? undefined,
   };
 }
 
@@ -68,6 +71,7 @@ export function useMealCloudSync() {
   const upsert = trpc.mealHistory.upsert.useMutation({ onSuccess: invalidateMealInsights });
   const importLogs = trpc.mealHistory.import.useMutation({ onSuccess: invalidateMealInsights });
   const updateServings = trpc.mealHistory.updateServings.useMutation({ onSuccess: invalidateMealInsights });
+  const updateLocation = trpc.mealHistory.updateLocation.useMutation({ onSuccess: invalidateMealInsights });
   const deleteLog = trpc.mealHistory.delete.useMutation({ onSuccess: invalidateMealInsights });
   const clearDate = trpc.mealHistory.clearDate.useMutation({ onSuccess: invalidateMealInsights });
 
@@ -92,9 +96,10 @@ export function useMealCloudSync() {
     logs,
     historyLoading: auth.isAuthenticated && cloudHistory.isLoading,
     historyError: cloudHistory.error,
-    cloudSyncing: upsert.isPending || importLogs.isPending || updateServings.isPending || deleteLog.isPending || clearDate.isPending,
+    cloudSyncing: upsert.isPending || importLogs.isPending || updateServings.isPending || updateLocation.isPending || deleteLog.isPending || clearDate.isPending,
     syncLog,
     updateCloudServings: updateServings.mutate,
+    updateCloudLocation: updateLocation.mutate,
     deleteCloudLog: deleteLog.mutate,
     clearCloudDate: clearDate.mutate,
     dailySummary: calculateDailySummary,

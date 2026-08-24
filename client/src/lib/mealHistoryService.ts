@@ -8,6 +8,7 @@ import {
 export const MEAL_HISTORY_STORAGE_KEY = "platefootprint-meal-history-v1";
 export const MEAL_HISTORY_EVENT = "platefootprint-meal-history-updated";
 export const EMPTY_HISTORY_MESSAGE = "No meals logged yet for this day. Choose a meal to start your journal.";
+export const MAX_MEAL_LOCATION_LENGTH = 120;
 export type EntryMethod = "camera" | "manual" | "custom";
 
 export type MealLog = {
@@ -22,6 +23,7 @@ export type MealLog = {
   category: FoodCategory;
   entryMethod: EntryMethod;
   note?: string;
+  location?: string;
 };
 
 export type MealLogInput = Omit<MealLog, "id" | "totalCarbonFootprint" | "loggedAt" | "localDate" | "entryMethod"> & {
@@ -80,8 +82,14 @@ function isStoredMealLog(value: unknown): value is Omit<MealLog, "entryMethod"> 
     typeof log.localDate === "string" &&
     (log.category === "Vegetarian" || log.category === "Non Vegetarian") &&
     (log.entryMethod === undefined || log.entryMethod === "camera" || log.entryMethod === "manual" || log.entryMethod === "custom") &&
-    (log.note === undefined || typeof log.note === "string")
+    (log.note === undefined || typeof log.note === "string") &&
+    (log.location === undefined || typeof log.location === "string")
   );
+}
+
+export function normaliseMealLocation(value: string | undefined): string | undefined {
+  const cleaned = value?.replace(/\s+/g, " ").trim().slice(0, MAX_MEAL_LOCATION_LENGTH);
+  return cleaned || undefined;
 }
 
 function writeMealLogs(logs: MealLog[], storage?: StorageLike | null): void {
@@ -128,6 +136,7 @@ export function addMealLog(input: MealLogInput, storage?: StorageLike | null): M
     category: input.category,
     entryMethod: input.entryMethod ?? "manual",
     note: input.note?.trim() || undefined,
+    location: normaliseMealLocation(input.location),
   };
 
   const logs = readMealLogs(storage);
@@ -167,6 +176,13 @@ export function updateMealLogServings(
     };
   });
 
+  writeMealLogs(updatedLogs, storage);
+  return updatedLogs;
+}
+
+export function updateMealLogLocation(id: string, location: string | undefined, storage?: StorageLike | null): MealLog[] {
+  const normalisedLocation = normaliseMealLocation(location);
+  const updatedLogs = readMealLogs(storage).map((log) => log.id === id ? { ...log, location: normalisedLocation } : log);
   writeMealLogs(updatedLogs, storage);
   return updatedLogs;
 }

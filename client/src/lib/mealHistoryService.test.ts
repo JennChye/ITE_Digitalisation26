@@ -8,6 +8,7 @@ import {
   deleteMealLog,
   getLogsForDate,
   readMealLogs,
+  updateMealLogLocation,
   updateMealLogServings,
 } from "./mealHistoryService";
 import { formatCarbonFootprint } from "./mealFootprint";
@@ -78,6 +79,14 @@ describe("meal history service", () => {
     const updatedLogs = updateMealLogServings(log.id, 3, storage);
 
     expect(updatedLogs[0]).toMatchObject({ servings: 3, totalCarbonFootprint: 9.39 });
+  });
+
+  it("stores a trimmed private meal location and lets the owner update it", () => {
+    const log = addMealLog(createDefaultMealLogInput({ loggedAt: firstDay, location: "  ITE canteen  " }), storage);
+    expect(log.location).toBe("ITE canteen");
+    const updatedLogs = updateMealLogLocation(log.id, "Home", storage);
+    expect(updatedLogs[0].location).toBe("Home");
+    expect(readMealLogs(storage)[0].location).toBe("Home");
   });
 
   it("deleting one record keeps other records", () => {

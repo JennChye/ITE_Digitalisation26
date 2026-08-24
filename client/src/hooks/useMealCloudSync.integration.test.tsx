@@ -32,6 +32,7 @@ vi.mock("@/lib/trpc", () => {
         upsert: { useMutation: () => idleMutation },
         import: { useMutation: () => ({ mutate: state.importMutate, isPending: false }) },
         updateServings: { useMutation: () => idleMutation },
+        updateLocation: { useMutation: () => idleMutation },
         delete: { useMutation: () => idleMutation },
         clearDate: { useMutation: () => idleMutation },
       },
@@ -52,6 +53,7 @@ const localLog: MealLog = {
   localDate: "2026-08-23",
   category: "Non Vegetarian",
   entryMethod: "manual",
+  location: "ITE canteen",
 };
 
 describe("useMealCloudSync integration", () => {
@@ -77,6 +79,7 @@ describe("useMealCloudSync integration", () => {
       servings: 2,
       category: "Non Vegetarian",
       entryMethod: "manual",
+      locationText: "ITE canteen",
       localDate: localLog.localDate,
       loggedAt: new Date(localLog.loggedAt),
     }];
@@ -84,8 +87,8 @@ describe("useMealCloudSync integration", () => {
     rerender();
 
     await waitFor(() => expect(state.importMutate).toHaveBeenCalledTimes(1));
-    expect(state.importMutate).toHaveBeenCalledWith([expect.objectContaining({ clientLogId: "device-log-1", carbonHundredths: 313 })]);
-    expect(result.current.logs).toEqual([expect.objectContaining({ id: "44", servings: 2, totalCarbonFootprint: 6.26 })]);
+    expect(state.importMutate).toHaveBeenCalledWith([expect.objectContaining({ clientLogId: "device-log-1", carbonHundredths: 313, locationText: "ITE canteen" })]);
+    expect(result.current.logs).toEqual([expect.objectContaining({ id: "44", servings: 2, totalCarbonFootprint: 6.26, location: "ITE canteen" })]);
 
     act(() => rerender());
     expect(state.importMutate).toHaveBeenCalledTimes(1);

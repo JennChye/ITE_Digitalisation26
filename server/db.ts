@@ -97,6 +97,7 @@ export type CloudMealInput = {
   servings: number;
   category: "Vegetarian" | "Non Vegetarian";
   entryMethod: "camera" | "manual" | "custom";
+  locationText?: string;
   localDate: string;
   loggedAt: Date;
 };
@@ -160,7 +161,7 @@ export async function listUserTopMeals(userId: number): Promise<UserTopMeal[]> {
 
 export async function upsertUserMealLog(userId: number, input: CloudMealInput): Promise<void> {
   const db = requireDatabase(await getDb());
-  await db.insert(userMealLogs).values({ userId, ...input }).onDuplicateKeyUpdate({
+  await db.insert(userMealLogs).values({ userId, ...input, locationText: input.locationText ?? null }).onDuplicateKeyUpdate({
     set: {
       mealSlug: input.mealSlug,
       mealName: input.mealName,
@@ -168,6 +169,7 @@ export async function upsertUserMealLog(userId: number, input: CloudMealInput): 
       servings: input.servings,
       category: input.category,
       entryMethod: input.entryMethod,
+      locationText: input.locationText ?? null,
       localDate: input.localDate,
       loggedAt: input.loggedAt,
     },
@@ -177,6 +179,12 @@ export async function upsertUserMealLog(userId: number, input: CloudMealInput): 
 export async function updateUserMealLogServings(userId: number, id: number, servings: number): Promise<boolean> {
   const db = requireDatabase(await getDb());
   const result = await db.update(userMealLogs).set({ servings }).where(and(eq(userMealLogs.id, id), eq(userMealLogs.userId, userId)));
+  return result[0].affectedRows > 0;
+}
+
+export async function updateUserMealLogLocation(userId: number, id: number, locationText: string | null): Promise<boolean> {
+  const db = requireDatabase(await getDb());
+  const result = await db.update(userMealLogs).set({ locationText }).where(and(eq(userMealLogs.id, id), eq(userMealLogs.userId, userId)));
   return result[0].affectedRows > 0;
 }
 

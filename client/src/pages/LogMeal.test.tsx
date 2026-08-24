@@ -2,6 +2,7 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { readMealLogs } from "@/lib/mealHistoryService";
 
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
@@ -62,6 +63,7 @@ describe("flexible estimate navigation from Log a Meal", () => {
   beforeEach(() => {
     mocks.navigate.mockReset();
     mocks.mutate.mockReset();
+    window.localStorage.clear();
   });
 
   afterEach(() => {
@@ -75,6 +77,16 @@ describe("flexible estimate navigation from Log a Meal", () => {
     fireEvent.click(screen.getByRole("button", { name: /build flexible estimate for this meal/i }));
 
     expect(mocks.navigate).toHaveBeenCalledWith("/custom-estimate?meal=Mutton+rice");
+  });
+
+  it("saves an optional private meal location with a manual meal entry", () => {
+    render(<LogMeal />);
+    fireEvent.click(screen.getByRole("button", { name: /enter manually/i }));
+    fireEvent.click(screen.getByRole("option", { name: /Chicken Rice/i }));
+    fireEvent.change(screen.getByLabelText(/Where did you have it/i), { target: { value: "ITE canteen" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save supported meal" }));
+
+    expect(readMealLogs()[0]).toMatchObject({ mealName: "Chicken Rice", location: "ITE canteen" });
   });
 
   it("takes an unclear photo candidate and detected ingredients into a prefilled flexible estimate", async () => {

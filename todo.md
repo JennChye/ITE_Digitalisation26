@@ -97,6 +97,13 @@
 - [x] Add and run tests for new swap options and preference filtering.
 - [x] Document the expanded local meal swap options and mobile display check.
 - [x] Verify and record the local swap coverage, filtering safeguards, and mobile display check.
+- [x] Review local and cloud meal history structures for an optional private location field.
+- [x] Add optional location storage and safe cloud synchronisation for a user own meal logs.
+- [x] Add private location entry to meal logging and editing in Daily History.
+- [x] Display a saved meal location only in the owner private history.
+- [x] Add and run tests for location validation, history editing, privacy, and cloud sync.
+- [x] Document private meal location recording and manual testing steps.
+- [x] Verify and record the private meal location flow, ownership safeguards, and mobile check.
 
 - [x] Commit and push the completed PlateFootprint updates to GitHub.
 

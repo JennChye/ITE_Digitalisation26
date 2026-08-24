@@ -24,10 +24,11 @@ import {
   getLocalDateKey,
   getLogsForDate,
   readMealLogs,
+  updateMealLogLocation,
   updateMealLogServings,
 } from "@/lib/mealHistoryService";
 import { formatCarbonFootprint, normaliseServings } from "@/lib/mealFootprint";
-import { CalendarDays, ChevronRight, Cloud, Leaf, LogIn, Minus, Pencil, Plus, Trash2 } from "lucide-react";
+import { CalendarDays, ChevronRight, Cloud, Leaf, LogIn, MapPin, Minus, Pencil, Plus, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocation } from "wouter";
 
@@ -49,8 +50,9 @@ export default function DailyHistory() {
   const [localLogs, setLocalLogs] = useState<MealLog[]>(() => readMealLogs());
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingServings, setEditingServings] = useState(1);
+  const [editingLocation, setEditingLocation] = useState("");
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
-  const { isAuthenticated, logs: cloudLogs, historyLoading, updateCloudServings, deleteCloudLog, clearCloudDate } = useMealCloudSync();
+  const { isAuthenticated, logs: cloudLogs, historyLoading, updateCloudServings, updateCloudLocation, deleteCloudLog, clearCloudDate } = useMealCloudSync();
   const logs = isAuthenticated ? cloudLogs : localLogs;
 
   const dateLogs = useMemo(() => getLogsForDate(logs, selectedDate), [logs, selectedDate]);
@@ -59,15 +61,18 @@ export default function DailyHistory() {
   function startEditing(log: MealLog) {
     setEditingId(log.id);
     setEditingServings(log.servings);
+    setEditingLocation(log.location ?? "");
   }
 
   function saveServingEdit(log: MealLog) {
     if (isAuthenticated) {
       updateCloudServings({ id: Number(log.id), servings: editingServings });
+      updateCloudLocation({ id: Number(log.id), locationText: editingLocation.trim() || null });
       setEditingId(null);
       return;
     }
-    const updatedLogs = updateMealLogServings(log.id, editingServings);
+    updateMealLogServings(log.id, editingServings);
+    const updatedLogs = updateMealLogLocation(log.id, editingLocation);
     setLocalLogs(updatedLogs);
     setEditingId(null);
   }
@@ -173,6 +178,7 @@ export default function DailyHistory() {
                         <p className="text-xs font-extrabold uppercase tracking-[0.13em] text-[#6c8770]">{formatLoggedTime(log.loggedAt)}</p>
                         <h3 className="font-display mt-1 text-3xl leading-none tracking-[-0.05em] text-[#173f2e]">{log.mealName}</h3>
                         <p className="mt-2 text-sm font-bold text-[#5f7668]">{log.category} · {log.entryMethod === "camera" ? "Photo estimate" : log.entryMethod === "custom" ? "Custom estimate" : "Manual entry"}</p>
+                        {log.location && <p className="mt-2 flex items-center gap-1.5 text-sm font-bold text-[#476854]"><MapPin className="size-4 text-[#4d875a]" aria-hidden="true" />{log.location}</p>}
                       </div>
                       <button type="button" aria-label={`View ${log.mealName} details`} onClick={() => navigate(`/meal/${log.mealId}`)} className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#e6f0dc] text-[#1e593d] transition hover:bg-[#d6e8c8] active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2c7049]">
                         <ChevronRight className="size-5" aria-hidden="true" />
@@ -187,6 +193,7 @@ export default function DailyHistory() {
                           <output aria-live="polite" className="font-display text-3xl tracking-[-0.05em] text-[#174b31]">{editingServings} <span className="font-sans text-sm font-extrabold tracking-normal">{editingServings === 1 ? "serving" : "servings"}</span></output>
                           <button type="button" aria-label={`Increase ${log.mealName} servings`} onClick={() => setEditingServings((current) => current + 1)} className="flex size-11 items-center justify-center rounded-xl bg-[#216442] text-white shadow-[0_3px_0_#143e2a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2c7049]"><Plus className="size-4" aria-hidden="true" /></button>
                         </div>
+                        <label className="mt-4 block text-xs font-extrabold uppercase tracking-[0.13em] text-[#5c7a64]">Where you had it <span className="normal-case tracking-normal">optional and private</span><input aria-label={`Where you had ${log.mealName}`} value={editingLocation} onChange={(event) => setEditingLocation(event.target.value)} maxLength={120} placeholder="Example: ITE canteen, home" className="mt-2 min-h-11 w-full rounded-xl border border-[#d5e2cd] bg-white px-3 text-sm font-bold normal-case tracking-normal text-[#214b35] outline-none focus-visible:ring-2 focus-visible:ring-[#2c7049]" /></label>
                         <div className="mt-3 flex gap-3">
                           <button type="button" onClick={() => saveServingEdit(log)} className="min-h-11 flex-1 rounded-xl bg-[#216442] px-4 text-sm font-extrabold text-white shadow-[0_3px_0_#143e2a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2c7049]">Save change</button>
                           <button type="button" onClick={() => setEditingId(null)} className="min-h-11 rounded-xl border border-[#ccd9c3] bg-white px-4 text-sm font-extrabold text-[#476854] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2c7049]">Cancel</button>

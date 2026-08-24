@@ -138,6 +138,7 @@ export default function LogMeal() {
   const [manualFoodId, setManualFoodId] = useState("");
   const [dishSearch, setDishSearch] = useState("");
   const [manualNotes, setManualNotes] = useState("");
+  const [mealLocation, setMealLocation] = useState("");
   const [manualError, setManualError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
@@ -287,6 +288,7 @@ export default function LogMeal() {
       category: food.category,
       entryMethod,
       note,
+      location: mealLocation,
     });
     syncLog(newLog);
     clearPhoto();
@@ -438,6 +440,7 @@ export default function LogMeal() {
               <div className="mt-5 space-y-4">
                 <FoodSelector value={selectedFoodId || (photoRecognition?.status === "matched" ? photoRecognition.recognisedMeal.id : recognition.kind === "match" ? recognition.food.id : "")} onChange={setSelectedFoodId} catalog={foods} label="Recognised meal" />
                 <ServingInput value={servings} onChange={setServings} error={validateEntryServings(servings)} />
+                <label className="block"><span className="text-xs font-extrabold uppercase tracking-[0.13em] text-[#5a865c]">Where did you have it <span className="normal-case tracking-normal">optional and private</span></span><input value={mealLocation} onChange={(event) => setMealLocation(event.target.value)} maxLength={120} placeholder="Example: ITE canteen, home, hawker centre" className="mt-2 min-h-12 w-full rounded-2xl border border-[#d5e2cd] bg-[#fffdf5] px-4 text-base font-bold text-[#214b35] outline-none focus-visible:ring-2 focus-visible:ring-[#2c7049]" /><span className="mt-2 block text-xs leading-5 text-[#69806d]">Please do not enter a full address. This place is saved only in your private meal history.</span></label>
               </div>
             </section>
             {reviewFood && validateEntryServings(servings) === null && <div className="mt-5"><EstimateCard food={reviewFood} servings={servings} /></div>}
@@ -472,6 +475,7 @@ export default function LogMeal() {
                 </div>
               </div>
               <ServingInput value={servings} onChange={(value) => { setServings(value); setManualError(null); }} error={validateEntryServings(servings)} />
+              <label className="block"><span className="text-xs font-extrabold uppercase tracking-[0.13em] text-[#5a865c]">Where did you have it <span className="normal-case tracking-normal">optional and private</span></span><input value={mealLocation} onChange={(event) => setMealLocation(event.target.value)} maxLength={120} placeholder="Example: ITE canteen, home, hawker centre" className="mt-2 min-h-13 w-full rounded-2xl border border-[#d5e2cd] bg-[#fffdf5] px-4 text-base font-bold text-[#214b35] outline-none focus-visible:ring-2 focus-visible:ring-[#2c7049]" /><span className="mt-2 block text-xs leading-5 text-[#69806d]">Please do not enter a full address. This place is saved only in your private meal history.</span></label>
               <label className="block"><span className="text-xs font-extrabold uppercase tracking-[0.13em] text-[#5a865c]">Notes <span className="normal-case tracking-normal">optional</span></span><textarea value={manualNotes} onChange={(event) => setManualNotes(event.target.value)} placeholder="Example: Less rice, extra vegetables" rows={3} className="mt-2 w-full rounded-2xl border border-[#d5e2cd] bg-[#fffdf5] px-4 py-3 text-base text-[#214b35] outline-none focus-visible:ring-2 focus-visible:ring-[#2c7049]" /></label>
               {manualError && <p role="alert" className="rounded-xl bg-[#fff0ea] px-4 py-3 text-sm font-bold leading-6 text-[#8a3c29]">{manualError}</p>}
             </section>
