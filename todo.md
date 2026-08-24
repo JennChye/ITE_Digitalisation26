@@ -41,6 +41,15 @@
 - [x] Add and run tests for the session meal picker and mobile display.
 - [x] Test the main page renders exactly three session meal cards and the total badge.
 - [x] Test the same session meal cards stay stable across main page rerenders.
+- [x] Identify all meal records that do not yet have a food image.
+- [x] Generate realistic food images with a consistent PlateFootprint card composition.
+- [x] Upload and link generated images to the matching local and regional meal records.
+- [x] Add and run tests for image links and image fallback behaviour.
+- [x] Verify the twenty available generated image links in the meal catalogue.
+- [x] Generate and link the final ten meal images after the daily image quota resets.
+- [x] Link the final ten generated food images to their exact meal records.
+- [x] Verify every dish record has a linked image or intentional fallback removed.
+- [x] Test that an unmapped meal safely uses its visual gradient fallback.
 
 - [x] Commit and push the completed PlateFootprint updates to GitHub.
 

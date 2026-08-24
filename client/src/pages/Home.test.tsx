@@ -49,4 +49,18 @@ describe("main page session meals", () => {
     const secondCards = screen.getAllByTestId("session-meal-card").map((card) => card.textContent);
     expect(secondCards).toEqual(firstCards);
   });
+
+  it("uses the existing gradient fallback when a session dish has no image mapping", async () => {
+    mocks.cloudFoods = [
+      { ...foods[0], id: "unmapped-meal", name: "Unmapped Meal", image: undefined, cardGradient: "linear-gradient(135deg, #ffffff 0%, #123456 100%)" },
+      ...foods.slice(1, 3),
+    ];
+
+    render(<Home />);
+    await waitFor(() => expect(screen.getAllByTestId("session-meal-card")).toHaveLength(3));
+    const card = screen.getByText("Unmapped Meal").closest("button");
+
+    expect(card?.querySelector("img")).toBeNull();
+    expect(card?.querySelector('[data-testid="meal-image-fallback"]')?.getAttribute("style")).toContain("linear-gradient");
+  });
 });

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { foods as localFoods } from "@/lib/foodDatabase";
+import { getMealImage, MEAL_IMAGE_URLS } from "@/lib/mealImages";
 import { mergeCloudFoods } from "./useCloudFoods";
 
 describe("cloud published meal merge", () => {
@@ -26,5 +27,18 @@ describe("cloud published meal merge", () => {
       expect.objectContaining({ id: "vegetable-biryani-india", category: "Vegetarian", estimateMethod: "Regional research dataset" }),
     ]));
     expect(merged.find((food) => food.id === "chicken-rice")?.name).toBe("Chicken Rice");
+  });
+
+  it("links generated food images to local and regional dishes", () => {
+    const merged = mergeCloudFoods(localFoods, [
+      { slug: "beef-pho-vietnam", name: "Beef Pho", carbonScore: 1.26, category: "Non Vegetarian", estimateMethod: "regional_research", sourceLabel: "Pan Asian record E2963", sourceUrl: "https://doi.org/10.6084/m9.figshare.25999843.v3", sourcePublishedOn: "2025-05-05", factors: ["Country: Vietnam"] },
+    ]);
+
+    expect(merged.find((food) => food.id === "nasi-lemak")?.image).toBe(getMealImage("nasi-lemak"));
+    expect(merged.find((food) => food.id === "beef-pho-vietnam")?.image).toBe(getMealImage("beef-pho-vietnam"));
+    expect(Object.keys(MEAL_IMAGE_URLS)).toHaveLength(30);
+    expect(getMealImage("vegetable-biryani-india")).toContain("vegetable-biryani-india");
+    expect(localFoods.every((food) => Boolean(food.image ?? getMealImage(food.id)))).toBe(true);
+    expect(Object.values(MEAL_IMAGE_URLS).every((url) => url.startsWith("/manus-storage/"))).toBe(true);
   });
 });

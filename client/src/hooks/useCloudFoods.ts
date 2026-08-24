@@ -1,4 +1,5 @@
 import { Food, foods as localFoods } from "@/lib/foodDatabase";
+import { getMealImage } from "@/lib/mealImages";
 import { trpc } from "@/lib/trpc";
 import { useMemo } from "react";
 
@@ -34,9 +35,10 @@ export function mergeCloudFoods(local: Food[], published: CloudPublishedMeal[] |
   if (!published) return local;
   const mergedLocal = local.map((localFood) => {
     const cloudFood = published.find((record) => record.slug === localFood.id || record.name === localFood.name);
-    if (!cloudFood) return localFood;
+    if (!cloudFood) return { ...localFood, image: localFood.image ?? getMealImage(localFood.id) };
     return {
       ...localFood,
+      image: localFood.image ?? getMealImage(localFood.id),
       carbonScore: cloudFood.carbonScore,
       category: cloudFood.category,
       factors: cloudFood.factors,
@@ -53,6 +55,7 @@ export function mergeCloudFoods(local: Food[], published: CloudPublishedMeal[] |
       name: cloudFood.name,
       carbonScore: cloudFood.carbonScore,
       category: cloudFood.category,
+      image: getMealImage(cloudFood.slug),
       cardGradient: regionalGradient(index),
       factors: cloudFood.factors,
       estimateMethod: estimateMethodLabel(cloudFood.estimateMethod),

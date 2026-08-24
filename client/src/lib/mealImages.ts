@@ -1,0 +1,36 @@
+export const MEAL_IMAGE_URLS: Record<string, string> = {
+  "nasi-lemak": "/manus-storage/nasi-lemak_d845e37e.jpg",
+  "char-kway-teow": "/manus-storage/char-kway-teow_6c6ceafc.jpg",
+  "hokkien-mee": "/manus-storage/hokkien-mee_9475a9c6.jpg",
+  "pork-wanton-mee": "/manus-storage/pork-wanton-mee_2194b3c9.jpg",
+  "fishball-noodle-soup": "/manus-storage/fishball-noodle-soup_549e0c77.jpg",
+  "mee-soto": "/manus-storage/mee-soto_a8667f07.jpg",
+  "vegetarian-bee-hoon": "/manus-storage/vegetarian-bee-hoon_1687c0b6.jpg",
+  "beef-rendang-rice": "/manus-storage/beef-rendang-rice_34747d32.jpg",
+  "beef-pho-vietnam": "/manus-storage/beef-pho-vietnam_f63d8fff.jpg",
+  "beef-rendang-indonesia": "/manus-storage/beef-rendang-indonesia_620bb6e2.jpg",
+  "bibimbap-korea": "/manus-storage/bibimbap-korea_a6329ba5.jpg",
+  "butter-chicken-india": "/manus-storage/butter-chicken-india_5198688f.jpg",
+  "chana-masala-india": "/manus-storage/chana-masala-india_af3f66c3.jpg",
+  "chicken-adobo-philippines": "/manus-storage/chicken-adobo-philippines_2cd621f9.jpg",
+  "chinese-mapo-tofu": "/manus-storage/chinese-mapo-tofu_f64b22c6.jpg",
+  "chinese-ramen-noodle-salad": "/manus-storage/chinese-ramen-noodle-salad_e6602de4.jpg",
+  "dandan-noodles-china": "/manus-storage/dandan-noodles-china_44a34c18.jpg",
+  "filipino-chilli-crab": "/manus-storage/filipino-chilli-crab_bba3dc53.jpg",
+  "indonesian-nasi-goreng": "/manus-storage/indonesian-nasi-goreng_d0f1a1cf.jpg",
+  "japanese-beef-bowl": "/manus-storage/japanese-beef-bowl_9a0f92bf.jpg",
+  "kimchi-fried-rice-korea": "/manus-storage/kimchi-fried-rice-korea_996210c9.jpg",
+  "korean-spicy-fried-chicken": "/manus-storage/korean-spicy-fried-chicken_6101b95f.jpg",
+  "kung-pao-chicken-china": "/manus-storage/kung-pao-chicken-china_3c3f41df.jpg",
+  "malaysian-nasi-lemak": "/manus-storage/malaysian-nasi-lemak_511214e5.jpg",
+  "nasi-goreng-kambing": "/manus-storage/nasi-goreng-kambing_33e46c6e.jpg",
+  "pad-thai-thailand": "/manus-storage/pad-thai-thailand_292610f5.jpg",
+  "thai-green-curry-chicken": "/manus-storage/thai-green-curry-chicken_bf1b7c1a.jpg",
+  "thai-tom-yum-gong": "/manus-storage/thai-tom-yum-gong_a5c51df6.jpg",
+  "vegetable-biryani-india": "/manus-storage/vegetable-biryani-india_d612b43a.jpg",
+  "vietnamese-chicken-pho": "/manus-storage/vietnamese-chicken-pho_7a9805bb.jpg",
+};
+
+export function getMealImage(id: string): string | undefined {
+  return MEAL_IMAGE_URLS[id];
+}

@@ -102,7 +102,7 @@ export default function Home() {
                   className="meal-card group relative block min-h-48 w-full overflow-hidden rounded-[1.75rem] bg-[#fefcf4] text-left shadow-[0_10px_24px_rgba(36,79,54,0.1)] outline-offset-4 transition duration-200 hover:-translate-y-1 hover:shadow-[0_16px_30px_rgba(36,79,54,0.16)] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-[#2c7049]"
                   style={{ animationDelay: `${index * 65}ms` }}
                 >
-                  {food.image ? <img src={food.image} alt={food.name} className="absolute inset-y-0 right-0 h-full w-[63%] object-cover transition duration-500 group-hover:scale-105" /> : <span aria-hidden="true" className="absolute inset-y-0 right-0 w-[63%] transition duration-500 group-hover:scale-105" style={{ background: food.cardGradient }} />}
+                  {food.image ? <img src={food.image} alt={food.name} className="absolute inset-y-0 right-0 h-full w-[63%] object-cover transition duration-500 group-hover:scale-105" /> : <span data-testid="meal-image-fallback" aria-hidden="true" className="absolute inset-y-0 right-0 w-[63%] transition duration-500 group-hover:scale-105" style={{ background: food.cardGradient }} />}
                   <span className="absolute inset-y-0 left-0 w-[68%] bg-[#fffaf0]" />
                   <span className="absolute inset-y-0 left-[62%] w-10 bg-gradient-to-r from-[#fffaf0] to-transparent" />
                   <span className="relative flex min-h-48 max-w-[68%] flex-col items-start justify-between p-5 sm:p-6">
