@@ -18,15 +18,15 @@ describe("Custom Meal Estimator", () => {
     });
 
     expect(estimate).toEqual({
-      carbonPerServing: 1.11,
-      totalCarbonFootprint: 2.22,
+      carbonPerServing: 1.17,
+      totalCarbonFootprint: 2.34,
       category: "Vegetarian",
       factors: ["Tofu or beans 150 g", "Rice 200 g", "Boiled or steamed", "Vegetables 100 g"],
       contributions: [
-        { label: "Tofu or beans 150 g", carbonPerServing: 0.45, percentage: 40.5 },
-        { label: "Rice 200 g", carbonPerServing: 0.46, percentage: 41.4 },
-        { label: "Boiled or steamed", carbonPerServing: 0.1, percentage: 9 },
-        { label: "Vegetables 100 g", carbonPerServing: 0.1, percentage: 9 },
+        { label: "Tofu or beans 150 g", carbonPerServing: 0.45, percentage: 38.6, source: "Global average ingredient factor" },
+        { label: "Rice 200 g", carbonPerServing: 0.52, percentage: 44.3, source: "Singapore Ecosperity food impact report" },
+        { label: "Boiled or steamed", carbonPerServing: 0.1, percentage: 8.6, source: "Prototype cooking energy assumption" },
+        { label: "Vegetables 100 g", carbonPerServing: 0.1, percentage: 8.6, source: "Global average ingredient factor" },
       ],
     });
   });

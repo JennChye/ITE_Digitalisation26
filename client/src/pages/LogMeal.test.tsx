@@ -48,14 +48,30 @@ describe("unclear photo camera recovery", () => {
     render(<PhotoRecognitionFallback candidateName="Mixed noodles" imageQuality="limited" ingredients={["noodles", "egg"]} matchExplanation="The bowl is partly hidden." reviewNote="Please check the meal yourself." onRetake={onRetake} onManual={onManual} onFlexibleEstimate={onFlexibleEstimate} />);
 
     expect(screen.getByText("Possible dish: Mixed noodles")).toBeTruthy();
-    expect(screen.getByText("Possible visible ingredients: noodles, egg")).toBeTruthy();
+    expect((screen.getByRole("textbox", { name: "Detected ingredient 1" }) as HTMLInputElement).value).toBe("noodles");
+    expect((screen.getByRole("textbox", { name: "Detected ingredient 2" }) as HTMLInputElement).value).toBe("egg");
+    expect(screen.getByText("Suggested flexible estimate")).toBeTruthy();
+    expect(screen.getByText(/kg CO2e/)).toBeTruthy();
+    fireEvent.change(screen.getByRole("textbox", { name: "Detected ingredient 1" }), { target: { value: "rice noodles" } });
+    fireEvent.click(screen.getByRole("button", { name: /remove detected ingredient 2/i }));
     fireEvent.click(screen.getByRole("button", { name: /retake photo/i }));
     fireEvent.click(screen.getByRole("button", { name: /enter manually/i }));
     fireEvent.click(screen.getByRole("button", { name: /build a flexible estimate/i }));
 
+    expect(onFlexibleEstimate).toHaveBeenLastCalledWith(["rice noodles"]);
+    expect(screen.getByRole("status")).toBeTruthy();
     expect(onRetake).toHaveBeenCalledTimes(1);
     expect(onManual).toHaveBeenCalledTimes(1);
     expect(onFlexibleEstimate).toHaveBeenCalledTimes(1);
+  });
+  it("shows Singapore source transparency and labelled correction controls for a rice photo suggestion", () => {
+    render(<PhotoRecognitionFallback candidateName="Rice bowl" imageQuality="clear" ingredients={["rice", "egg"]} matchExplanation="Rice is visible." reviewNote="Check the suggested assumptions." onRetake={vi.fn()} onManual={vi.fn()} onFlexibleEstimate={vi.fn()} />);
+
+    expect(screen.getByText(/Factor sources:.*Singapore Ecosperity food impact report/)).toBeTruthy();
+    expect(screen.getByRole("link", { name: /view Singapore food impact report/i })).toBeTruthy();
+    expect(screen.getByRole("textbox", { name: "Detected ingredient 1" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /remove detected ingredient 1/i })).toBeTruthy();
+    expect(screen.getByRole("status")).toBeTruthy();
   });
 });
 
@@ -118,8 +134,11 @@ describe("flexible estimate navigation from Log a Meal", () => {
     fireEvent.change(screen.getByLabelText("Upload meal photo"), { target: { files: [new File(["photo"], "meal.jpg", { type: "image/jpeg" })] } });
     await waitFor(() => expect(mocks.mutate).toHaveBeenCalledTimes(1));
     await act(async () => { await new Promise((resolve) => window.setTimeout(resolve, 600)); });
+    fireEvent.change(await screen.findByRole("textbox", { name: "Detected ingredient 1" }), { target: { value: "rice noodles" } });
+    fireEvent.click(await screen.findByRole("button", { name: /remove detected ingredient 2/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /remove detected ingredient 2/i }));
     fireEvent.click(await screen.findByRole("button", { name: /build a flexible estimate/i }));
 
-    expect(mocks.navigate).toHaveBeenCalledWith("/custom-estimate?meal=Prawn+curry+mee&ingredients=prawns%7Ccoconut+milk%7Cnoodles");
+    expect(mocks.navigate).toHaveBeenCalledWith("/custom-estimate?meal=Prawn+curry+mee&ingredients=rice+noodles");
   });
 });

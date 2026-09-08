@@ -16,6 +16,7 @@ import {
   stopCameraPreview,
 } from "@/lib/cameraService";
 import { Food } from "@/lib/foodDatabase";
+import { createCustomMealSuggestion, estimateCustomMeal, ECOSPERITY_SINGAPORE_FOOD_IMPACT_SOURCE_URL } from "@/lib/customMealEstimator";
 import { FAVORITE_MEAL_PLACES_EVENT, FavoriteMealPlace, readFavoriteMealPlaces, removeFavoriteMealPlace, saveFavoriteMealPlace } from "@/lib/favoriteMealPlaces";
 import { addMealLog, readMealLogs } from "@/lib/mealHistoryService";
 import { evaluateNewAchievements } from "@/lib/positiveLearning";
@@ -101,20 +102,42 @@ function PhotoQualityNote({ imageQuality }: { imageQuality: ImageQuality }) {
   return <p className="mt-3 rounded-xl bg-white/70 px-3 py-2 text-xs font-bold leading-5 text-[#785343]"><span className="font-extrabold">Photo check: </span>{message}</p>;
 }
 
-export function PhotoRecognitionFallback({ candidateName, imageQuality, ingredients, matchExplanation, reviewNote, onRetake, onManual, onFlexibleEstimate }: { candidateName: string; imageQuality: ImageQuality; ingredients: string[]; matchExplanation: string; reviewNote: string; onRetake: () => void; onManual: () => void; onFlexibleEstimate: () => void }) {
+export function PhotoRecognitionFallback({ candidateName, imageQuality, ingredients, matchExplanation, reviewNote, onRetake, onManual, onFlexibleEstimate }: { candidateName: string; imageQuality: ImageQuality; ingredients: string[]; matchExplanation: string; reviewNote: string; onRetake: () => void; onManual: () => void; onFlexibleEstimate: (ingredients: string[]) => void }) {
+  const [editableIngredients, setEditableIngredients] = useState(() => ingredients.slice(0, 8));
+  const updateIngredient = (index: number, value: string) => setEditableIngredients((current) => current.map((ingredient, itemIndex) => itemIndex === index ? value : ingredient));
+  const removeIngredient = (index: number) => setEditableIngredients((current) => current.filter((_, itemIndex) => itemIndex !== index));
+  const addIngredient = () => setEditableIngredients((current) => current.length >= 8 ? current : [...current, ""]);
+  const cleanedIngredients = editableIngredients.map((ingredient) => ingredient.trim()).filter(Boolean);
   return (
     <div role="status" className="mt-4 rounded-2xl border border-[#efcabe] bg-[#fff3ee] p-4 text-[#823421]">
       <p className="text-sm font-extrabold leading-6">We could not match this photo to a known dish with enough confidence.</p>
       {candidateName !== "No supported dish identified" && <p className="mt-2 text-sm font-bold leading-6 text-[#9a523d]">Possible dish: {candidateName}</p>}
-      {ingredients.length > 0 && <p className="mt-2 text-sm leading-6 text-[#9a523d]">Possible visible ingredients: {ingredients.join(", ")}</p>}
+      {editableIngredients.length > 0 && <div className="mt-3"><p className="text-sm font-extrabold text-[#9a523d]">Check visible ingredients</p><div className="mt-2 space-y-2">{editableIngredients.map((ingredient, index) => <div key={`${index}-${ingredient}`} className="flex items-center gap-2"><input aria-label={`Detected ingredient ${index + 1}`} value={ingredient} onChange={(event) => updateIngredient(index, event.target.value)} maxLength={48} className="min-h-11 min-w-0 flex-1 rounded-xl border border-[#e2c4b7] bg-white px-3 text-sm font-bold text-[#78412f] outline-none focus-visible:ring-2 focus-visible:ring-[#bd5439]" /><button type="button" aria-label={`Remove detected ingredient ${index + 1}`} onClick={() => removeIngredient(index)} className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-[#e2c4b7] bg-white text-[#9a523d] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#bd5439]"><X className="size-4" aria-hidden="true" /></button></div>)}</div><button type="button" onClick={addIngredient} disabled={editableIngredients.length >= 8} className="mt-2 min-h-10 rounded-xl border border-[#d7bfaf] bg-white px-3 text-xs font-extrabold text-[#78412f] disabled:opacity-40">Add ingredient</button></div>}
       <p className="mt-2 text-sm leading-6 text-[#9a523d]">{matchExplanation}</p>
       <PhotoQualityNote imageQuality={imageQuality} />
       <p className="mt-2 text-sm leading-6 text-[#9a523d]">{reviewNote}</p>
+      {candidateName !== "No supported dish identified" && <FlexibleEstimatePreview candidateName={candidateName} ingredients={cleanedIngredients} onOpen={() => onFlexibleEstimate(cleanedIngredients)} />}
       <div className="mt-4 grid grid-cols-2 gap-3">
         <button type="button" onClick={onRetake} className="min-h-12 rounded-xl bg-[#d57448] px-3 text-sm font-extrabold text-white shadow-[0_3px_0_#a94f31] transition hover:bg-[#bd5b3b] active:translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#bd5439]"><RefreshCw className="mr-1.5 inline size-4" aria-hidden="true" />{retakePhotoLabel}</button>
         <button type="button" onClick={onManual} className="min-h-12 rounded-xl border border-[#d7bfaf] bg-white px-3 text-sm font-extrabold text-[#78412f] transition hover:bg-[#fff9f6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#bd5439]"><PencilLine className="mr-1.5 inline size-4" aria-hidden="true" />{enterManuallyLabel}</button>
       </div>
-      <button type="button" onClick={onFlexibleEstimate} className="mt-3 min-h-12 w-full rounded-xl border border-[#d7bfaf] bg-[#fff9f6] px-3 text-sm font-extrabold text-[#78412f] transition hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#bd5439]"><Sparkles className="mr-1.5 inline size-4" aria-hidden="true" />Build a flexible estimate</button>
+      <button type="button" onClick={() => onFlexibleEstimate(cleanedIngredients)} className="mt-3 min-h-12 w-full rounded-xl border border-[#d7bfaf] bg-[#fff9f6] px-3 text-sm font-extrabold text-[#78412f] transition hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#bd5439]"><Sparkles className="mr-1.5 inline size-4" aria-hidden="true" />Build a flexible estimate</button>
+    </div>
+  );
+}
+
+function FlexibleEstimatePreview({ candidateName, ingredients, onOpen }: { candidateName: string; ingredients: string[]; onOpen: () => void }) {
+  const suggestion = createCustomMealSuggestion(candidateName, ingredients);
+  const estimate = estimateCustomMeal(suggestion);
+  return (
+    <div className="mt-4 rounded-2xl border border-[#e5d3a9] bg-[#fff8e7] p-4 text-[#684922]">
+      <p className="text-xs font-extrabold uppercase tracking-[0.13em] text-[#9a6a2e]">Suggested flexible estimate</p>
+      <p className="mt-2 font-display text-3xl tracking-[-0.05em]">{formatCarbonFootprint(estimate.carbonPerServing)} kg CO2e</p>
+      <p className="mt-1 text-sm font-bold text-[#765934]">per serving, based on visible ingredients and starting assumptions</p>
+      <p className="mt-3 text-sm leading-6 text-[#765934]">This is not a confirmed dish value. Check the suggested ingredients, amount, and cooking method before saving.</p>
+      <p className="mt-3 text-xs font-bold leading-5 text-[#856b46]">Factor sources: {Array.from(new Set(estimate.contributions.map((contribution) => contribution.source))).join(", ")}. Rice uses a Singapore food impact factor where suggested.</p>
+      <a href={ECOSPERITY_SINGAPORE_FOOD_IMPACT_SOURCE_URL} target="_blank" rel="noreferrer" className="mt-2 inline-block text-xs font-extrabold text-[#8a5b25] underline underline-offset-4">View Singapore food impact report</a>
+      <button type="button" onClick={onOpen} className="mt-4 min-h-12 w-full rounded-xl bg-[#b97835] px-4 text-sm font-extrabold text-white shadow-[0_3px_0_#895321] transition hover:bg-[#a6652a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#895321]"><Sparkles className="mr-2 inline size-4" aria-hidden="true" />Review and adjust estimate</button>
     </div>
   );
 }
@@ -441,7 +464,7 @@ export default function LogMeal() {
                   <p className="mt-3 text-sm leading-6 text-[#486d52]">{photoRecognition.reviewNote}</p>
                 </div>
               ) : photoRecognition?.status === "unclear" ? (
-                <PhotoRecognitionFallback candidateName={photoRecognition.candidateName} imageQuality={photoRecognition.imageQuality} ingredients={photoRecognition.ingredients} matchExplanation={photoRecognition.matchExplanation} reviewNote={photoRecognition.reviewNote} onRetake={beginCamera} onManual={() => { clearPhoto(); setMode("manual"); }} onFlexibleEstimate={() => openFlexibleEstimate(photoRecognition.candidateName, photoRecognition.ingredients)} />
+                <PhotoRecognitionFallback candidateName={photoRecognition.candidateName} imageQuality={photoRecognition.imageQuality} ingredients={photoRecognition.ingredients} matchExplanation={photoRecognition.matchExplanation} reviewNote={photoRecognition.reviewNote} onRetake={beginCamera} onManual={() => { clearPhoto(); setMode("manual"); }} onFlexibleEstimate={(ingredients) => openFlexibleEstimate(photoRecognition.candidateName, ingredients)} />
               ) : scanError ? (
                 <div role="alert" className="mt-4 rounded-2xl border border-[#efcabe] bg-[#fff3ee] p-4 text-[#823421]"><p className="text-sm font-extrabold leading-6">{scanError}</p>{!isAuthenticated && <button type="button" onClick={startLogin} className="mt-3 min-h-11 rounded-xl bg-[#216442] px-4 text-sm font-extrabold text-white shadow-[0_3px_0_#143e2a]">Sign in to scan</button>}</div>
               ) : recognition.kind === "unclear" ? (

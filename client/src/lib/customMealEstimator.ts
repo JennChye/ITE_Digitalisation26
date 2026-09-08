@@ -4,7 +4,7 @@ import { MAX_ENTRY_SERVINGS, MIN_ENTRY_SERVINGS, validateEntryServings } from ".
 export type CustomProteinId = "tofu" | "egg" | "chicken" | "fish" | "pork" | "beef" | "lamb" | "prawns";
 export type CustomBaseId = "rice" | "noodles" | "none";
 export type CookingMethodId = "boiled" | "stir-fried" | "deep-fried" | "slow-cooked";
-export type IngredientFactorSource = "Singapore IPUR ingredient example" | "Global average ingredient factor";
+export type IngredientFactorSource = "Singapore IPUR ingredient example" | "Global average ingredient factor" | "Singapore Ecosperity food impact report" | "Prototype cooking energy assumption";
 
 type EstimateOption<T extends string> = {
   id: T;
@@ -23,6 +23,7 @@ export const MIN_INGREDIENT_AMOUNT_GRAMS = 25;
 export const MAX_INGREDIENT_AMOUNT_GRAMS = 500;
 export const INGREDIENT_AMOUNT_STEP_GRAMS = 25;
 export const GLOBAL_INGREDIENT_FACTOR_SOURCE_URL = "https://ourworldindata.org/grapher/ghg-per-kg-poore";
+export const ECOSPERITY_SINGAPORE_FOOD_IMPACT_SOURCE_URL = "https://www.ecosperity.sg/content/dam/ecosperity-aem/en/reports/Environmental-Impact-of-Key-Food-Items-in-Singapore_Oct2019.pdf";
 
 export const CUSTOM_PROTEINS: Array<EstimateOption<CustomProteinId> & { category: FoodCategory }> = [
   { id: "tofu", label: "Tofu or beans", carbonPer100g: 0.3, category: "Vegetarian", source: "Global average ingredient factor" },
@@ -36,7 +37,7 @@ export const CUSTOM_PROTEINS: Array<EstimateOption<CustomProteinId> & { category
 ];
 
 export const CUSTOM_BASES: Array<EstimateOption<CustomBaseId>> = [
-  { id: "rice", label: "Rice", carbonPer100g: 0.23, source: "Global average ingredient factor" },
+  { id: "rice", label: "Rice", carbonPer100g: 0.258, source: "Singapore Ecosperity food impact report" },
   { id: "noodles", label: "Noodles", carbonPer100g: 0.27, source: "Global average ingredient factor" },
   { id: "none", label: "No rice or noodles", carbonPer100g: 0, source: "Global average ingredient factor" },
 ];
@@ -79,6 +80,7 @@ export type CustomMealEstimate = {
     label: string;
     carbonPerServing: number;
     percentage: number;
+    source: IngredientFactorSource;
   }>;
 };
 
@@ -170,13 +172,13 @@ export function estimateCustomMeal(input: CustomMealInput): CustomMealEstimate {
   const base = findOption(CUSTOM_BASES, input.baseId);
   const cooking = findCookingOption(input.cookingMethodId);
   const baseAmountGrams = input.baseId === "none" ? 0 : input.baseAmountGrams;
-  const components: Array<{ label: string; carbonPerServing: number }> = [
-    { label: `${protein.label} ${input.proteinAmountGrams} g`, carbonPerServing: amountFactor(protein.carbonPer100g, input.proteinAmountGrams) },
-    { label: input.baseId === "none" ? base.label : `${base.label} ${baseAmountGrams} g`, carbonPerServing: amountFactor(base.carbonPer100g, baseAmountGrams) },
-    cooking,
+  const components: Array<{ label: string; carbonPerServing: number; source: IngredientFactorSource }> = [
+    { label: `${protein.label} ${input.proteinAmountGrams} g`, carbonPerServing: amountFactor(protein.carbonPer100g, input.proteinAmountGrams), source: protein.source },
+    { label: input.baseId === "none" ? base.label : `${base.label} ${baseAmountGrams} g`, carbonPerServing: amountFactor(base.carbonPer100g, baseAmountGrams), source: base.source },
+    { label: cooking.label, carbonPerServing: cooking.carbonPerServing, source: "Prototype cooking energy assumption" },
   ];
-  if (input.includesVegetables) components.push({ label: `${VEGETABLE_COMPONENT.label} ${input.vegetableAmountGrams} g`, carbonPerServing: amountFactor(VEGETABLE_COMPONENT.carbonPer100g, input.vegetableAmountGrams) });
-  if (input.includesCoconutOrDairy) components.push({ label: `${COCONUT_DAIRY_COMPONENT.label} ${input.coconutOrDairyAmountGrams} g`, carbonPerServing: amountFactor(COCONUT_DAIRY_COMPONENT.carbonPer100g, input.coconutOrDairyAmountGrams) });
+  if (input.includesVegetables) components.push({ label: `${VEGETABLE_COMPONENT.label} ${input.vegetableAmountGrams} g`, carbonPerServing: amountFactor(VEGETABLE_COMPONENT.carbonPer100g, input.vegetableAmountGrams), source: VEGETABLE_COMPONENT.source });
+  if (input.includesCoconutOrDairy) components.push({ label: `${COCONUT_DAIRY_COMPONENT.label} ${input.coconutOrDairyAmountGrams} g`, carbonPerServing: amountFactor(COCONUT_DAIRY_COMPONENT.carbonPer100g, input.coconutOrDairyAmountGrams), source: COCONUT_DAIRY_COMPONENT.source });
 
   const rawCarbonPerServing = components.reduce((total, component) => total + component.carbonPerServing, 0);
   const carbonPerServing = Number(rawCarbonPerServing.toFixed(2));
@@ -187,6 +189,7 @@ export function estimateCustomMeal(input: CustomMealInput): CustomMealEstimate {
       label: component.label,
       carbonPerServing: Number(component.carbonPerServing.toFixed(2)),
       percentage: Number(((component.carbonPerServing / rawCarbonPerServing) * 100).toFixed(1)),
+      source: component.source,
     }));
 
   return {

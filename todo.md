@@ -186,3 +186,21 @@
 - [x] Add friendly missing meal fallback handling.
 - [x] Create and run calculation and user interface tests.
 - [x] Review mobile and desktop layouts, then deliver the update.
+
+- [x] Complete the technical architecture and data flow section in the Product Requirements Document.
+- [x] Validate the completed PRD section and deliver the updated document.
+
+- [x] Improve camera and upload meal logging to identify likely dishes and visible ingredients beyond the known dish database.
+- [x] Add transparent ingredient based carbon estimates using multiple credible Singapore relevant sources, including the Ecosperity report.
+- [x] Add confidence, user correction, uncertainty, source labels, and privacy safeguards to image review.
+- [x] Test unknown meal recognition, ingredient editing, estimate calculation, fallback, and accessibility.
+- [x] Map Ecosperity and selected Singapore relevant factor sources into flexible estimate calculations.
+- [x] Show source labels and a clear correction flow for detected ingredients and assumptions before saving.
+- [x] Add tests for unknown estimate source labels, ingredient correction, and key accessibility behavior.
+- [ ] Update documentation, sync GitHub, and save a project checkpoint after verification.
+
+- [x] Add a test proving corrected ingredients change the flexible estimate navigation query.
+- [x] Add tests for source labels and the Singapore report link in unknown meal review.
+- [x] Add focused accessibility assertions for ingredient inputs, remove buttons, and review status.
+
+- [x] Add a LogMeal integration test proving edited photo ingredients appear in the final flexible estimate URL.
