@@ -14,6 +14,7 @@ import {
   CUSTOM_MEAL_NOTICE,
   CUSTOM_PROTEINS,
   GLOBAL_INGREDIENT_FACTOR_SOURCE_URL,
+  ECOSPERITY_SINGAPORE_FOOD_IMPACT_SOURCE_URL,
   INGREDIENT_AMOUNT_STEP_GRAMS,
   MAX_INGREDIENT_AMOUNT_GRAMS,
   MIN_INGREDIENT_AMOUNT_GRAMS,
@@ -194,7 +195,7 @@ export default function CustomMealEstimator() {
                   <li key={contribution.label} className="rounded-2xl bg-white/10 px-4 py-3">
                     <div className="flex items-center justify-between gap-3 text-sm"><span className="flex min-w-0 items-center gap-2 font-extrabold text-[#f6fbf2]"><span className={`size-3 shrink-0 rounded-full ${CONTRIBUTION_COLORS[index % CONTRIBUTION_COLORS.length]}`} aria-hidden="true" />{contribution.label}</span><span className="shrink-0 font-extrabold text-[#d5e8c8]">{contribution.percentage}%</span></div>
                     <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/15" role="progressbar" aria-label={`${contribution.label} contributes ${contribution.percentage}% or ${contribution.carbonPerServing.toFixed(2)} kg CO2e per serving`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={contribution.percentage}><div className={`h-full rounded-full ${CONTRIBUTION_COLORS[index % CONTRIBUTION_COLORS.length]}`} style={{ width: `${contribution.percentage}%` }} /></div>
-                    <p className="mt-2 text-xs font-bold text-[#d5e8c8]">{contribution.carbonPerServing.toFixed(2)} kg CO2e per serving</p>
+                    <p className="mt-2 text-xs font-bold text-[#d5e8c8]">{contribution.carbonPerServing.toFixed(2)} kg CO2e per serving · {contribution.source}</p>
                   </li>
                 ))}
               </ul>
@@ -205,7 +206,7 @@ export default function CustomMealEstimator() {
         <section className="receipt-note mt-6 px-5 py-5 text-sm leading-6 text-[#526c5a]">
           <p className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.13em] text-[#3d704d]"><Sparkles className="size-4" aria-hidden="true" /> Why this is a prototype</p>
           <p className="mt-2">The estimator uses rounded ingredient factors and your selected amounts. It is a learning tool and not a full recipe assessment.</p>
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1"><a href={FOOD_DATA_SOURCE_URL} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center gap-1 font-extrabold text-[#347349] underline decoration-[#94b989] underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2c7049]">Singapore examples <ArrowUpRight className="size-4" aria-hidden="true" /></a><a href={GLOBAL_INGREDIENT_FACTOR_SOURCE_URL} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center gap-1 font-extrabold text-[#347349] underline decoration-[#94b989] underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2c7049]">Global ingredient factors <ArrowUpRight className="size-4" aria-hidden="true" /></a></div>
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1"><a href={FOOD_DATA_SOURCE_URL} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center gap-1 font-extrabold text-[#347349] underline decoration-[#94b989] underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2c7049]">Singapore examples <ArrowUpRight className="size-4" aria-hidden="true" /></a><a href={GLOBAL_INGREDIENT_FACTOR_SOURCE_URL} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center gap-1 font-extrabold text-[#347349] underline decoration-[#94b989] underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2c7049]">Global ingredient factors <ArrowUpRight className="size-4" aria-hidden="true" /></a><a href={ECOSPERITY_SINGAPORE_FOOD_IMPACT_SOURCE_URL} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center gap-1 font-extrabold text-[#347349] underline decoration-[#94b989] underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2c7049]">Singapore food impact report <ArrowUpRight className="size-4" aria-hidden="true" /></a></div>
         </section>
 
         <Button onClick={saveCustomMeal} className="mt-6 h-13 w-full rounded-2xl bg-[#d57448] text-base font-extrabold text-white shadow-[0_4px_0_#a94f31] transition hover:bg-[#bd5b3b] active:translate-y-0.5 active:shadow-[0_2px_0_#a94f31]">Save custom meal</Button>
